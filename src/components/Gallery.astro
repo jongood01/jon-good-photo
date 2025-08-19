@@ -1,0 +1,110 @@
+---
+import { Image } from "astro:assets";
+import { getCollection } from "astro:content";
+import gradient from "../assets/gradient.svg";
+const images = await getCollection("photos");
+---
+
+<div class="flex h-full">
+<div
+  id="gallery"
+  class="w-full max-w-[470px] py-10 overflow-y-scroll scroll-smooth px-5 lg:px-10 h-full flex flex-col gap-5 snap-mandatory snap-y scrollbar-hide"
+>
+<div class="max-w-[450px] snap-center snap-always"> 
+  <Image src={gradient} alt="an image test" width={450} height={450} />
+</div>
+ 
+  {
+    images.map(({ data }) => (
+      <div class="w-fit">
+        <div
+          id={data.id}
+          class="gallery-image max-w-[450px] snap-center snap-always"
+        >
+          <Image
+            src={data.thumbnail}
+            alt={data.altText || "an image test"}
+            width={450}}
+            height={450}
+            quality={'max'}
+          />
+        </div>
+        <div class="h-6 w-full relative left-full origin-top-left -rotate-90 flex justify-between">
+          <div>
+            {data.format}
+          </div>
+          <div>
+            {data.collectionIndex} • {data.categoryIndex} • {data.imageIndex}
+          </div>
+        </div>
+      </div>
+    ))
+  }
+<div class="max-w-[450px] snap-center snap-always"> 
+  <Image src={gradient} alt="an image test" width={450} height={450} />
+</div>
+  </div>
+  <div class="relative h-full w-full">
+  {
+    images.map(({ data }) => (
+      <div
+        id={`map-image-${data.id}`}
+        class="transition-opacity duration-700 opacity-0 absolute top-0 left-0"
+      >
+        <Image
+          src={data.file}
+          alt="Astro logo"
+          height={700}
+          quality={'max'}
+          class="w-full"
+        />
+
+        <h2 class="mt-4">{data.title}</h2>
+        <p class="text-black/40">{data.description}</p>
+      </div>
+    ))
+  }
+</div>
+</div>
+<script>
+  const images = document.querySelectorAll(".gallery-image");
+  const gallery = document.getElementById("gallery");
+
+  gallery?.addEventListener("scroll", () => {
+    images.forEach((image) => {
+      const imageTop = image.getBoundingClientRect().top;
+      const imageBottom = image.getBoundingClientRect().bottom;
+      const mapImage = document.getElementById(`map-image-${image.id}`);
+      if (imageTop > 0 && imageBottom < window.innerHeight) {
+        image.classList.add("active");
+        mapImage?.classList.remove("opacity-0");
+        mapImage?.classList.add("opacity-100");
+      } else {
+        image.classList.remove("active");
+        mapImage?.classList.remove("opacity-100");
+        mapImage?.classList.add("opacity-0");
+      }
+    });
+  });
+</script>
+
+<style is:global>
+  .gallery-image {
+    position: relative;
+  }
+
+  .gallery-image::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    transition: background 0.5s ease-in;
+  }
+
+  .gallery-image.active::after {
+    background: rgba(0, 0, 0, 0);
+  }
+</style>

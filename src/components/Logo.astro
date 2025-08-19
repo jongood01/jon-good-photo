@@ -1,0 +1,15 @@
+---
+import { Image } from "astro:assets";
+import logoImage from "../assets/Logo.svg";
+---
+
+<h1
+  class="absolute z-50 top-5 left-10 mix-blend-difference font-heading font-black text-pureblue text-5xl"
+>
+  <Image
+    src={logoImage}
+    alt="Jon Good Photography"
+    width={450}
+    loading="eager"
+  />
+</h1>
