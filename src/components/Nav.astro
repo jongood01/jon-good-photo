@@ -1,14 +1,12 @@
 ---
-import { Image } from "astro:assets";
-import MenuIcon from "../assets/menu-icon.svg";
+import { Image } from 'astro:assets'
+import MenuIcon from '../assets/menu-icon.svg'
 ---
 
 <button id="menu-button" class="cursor-pointer lg:hidden">
   <Image src={MenuIcon} alt="Menu" class="w-9 h-9" />
 </button>
-<nav
-  class="hidden lg:block absolute top-16 left-0 bg-white z-50 w-full lg:static lg:bg-inherit lg:top-auto lg:right-auto"
->
+<nav class="hidden lg:block absolute top-16 left-0 bg-white z-50 w-full lg:static lg:bg-inherit lg:top-auto lg:right-auto">
   <ul class="flex lg:flex-row flex-col gap-4 py-4 px-8">
     <li>
       <a href="/" class="text-pureblue text-lg">Home</a>
@@ -23,9 +21,16 @@ import MenuIcon from "../assets/menu-icon.svg";
 </nav>
 
 <script>
-  const menuButton = document.getElementById("menu-button");
-  menuButton?.addEventListener("click", () => {
-    const menu = document.querySelector("nav");
-    menu?.classList.toggle("hidden");
-  });
+  const menuButton = document.getElementById('menu-button')
+  const menu = document.querySelector('nav')
+
+  menuButton?.addEventListener('click', () => {
+    menu?.classList.toggle('hidden')
+  })
+
+  window.addEventListener('click', (e) => {
+    if (!menu?.contains(e.target as Node) && !menuButton?.contains(e.target as Node)) {
+      menu?.classList.add('hidden')
+    }
+  })
 </script>

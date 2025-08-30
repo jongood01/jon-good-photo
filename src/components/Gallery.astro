@@ -1,100 +1,136 @@
 ---
-import { Image } from "astro:assets";
-import { getCollection } from "astro:content";
-import gradient from "../assets/gradient.svg";
-const images = await getCollection("photos");
+import { Image } from 'astro:assets'
+import { getCollection } from 'astro:content'
+import gradient from '../assets/gradient.svg'
+import CloseIcon from '../assets/close-icon.svg'
+const images = await getCollection('photos')
 ---
 
-<div class="flex h-full">
-<div
-  id="gallery"
-  class="w-full max-w-[470px] py-10 overflow-y-scroll scroll-smooth px-5 lg:px-10 h-full flex flex-col gap-5 snap-mandatory snap-y scrollbar-hide"
->
-<div class="max-w-[450px] snap-center snap-always"> 
-  <Image src={gradient} alt="an image test" width={450} height={450} />
-</div>
- 
-  {
-    images.map(({ data }) => (
-      <div class="w-fit">
-        <div
-          id={data.id}
-          class="gallery-image max-w-[450px] snap-center snap-always"
-        >
-          <Image
-            src={data.thumbnail}
-            alt={data.altText || "an image test"}
-            width={450}}
-            height={450}
-            quality={'max'}
-          />
-        </div>
-        <div class="h-6 w-full relative left-full origin-top-left -rotate-90 flex justify-between">
-          <div>
-            {data.format}
-          </div>
-          <div>
-            {data.collectionIndex} • {data.categoryIndex} • {data.imageIndex}
+<div class="lg:flex h-full gap-6">
+  <div
+    id="gallery"
+    class="w-full max-w-[470px] py-10 overflow-y-scroll scroll-smooth px-5 lg:px-10 h-full flex flex-col gap-5 snap-mandatory snap-y scrollbar-hide"
+  >
+    <div class="gallery-image max-w-[450px] snap-center snap-always">
+      <Image src={gradient} alt="an image test" width={450} height={450} />
+    </div>
+
+    {
+      images.map(({ data }) => (
+        <div class="w-fit">
+          <button id={`thumbnail-${data.id}`} class="gallery-image max-w-[450px] snap-center snap-always">
+            <Image src={data.thumbnail} alt={data.altText || 'an image test'} width={450} height={450} quality={'max'} />
+          </button>
+          <div class="h-6 w-full relative left-full origin-top-left -rotate-90 flex justify-between">
+            <div>{data.format}</div>
+            <div>
+              {data.collectionIndex} • {data.categoryIndex} • {data.imageIndex}
+            </div>
           </div>
         </div>
-      </div>
-    ))
-  }
-<div class="max-w-[450px] snap-center snap-always"> 
-  <Image src={gradient} alt="an image test" width={450} height={450} />
-</div>
+      ))
+    }
+    <div class="gallery-image max-w-[450px] snap-center snap-always">
+      <Image src={gradient} alt="an image test" width={450} height={450} />
+    </div>
   </div>
-  <div class="relative h-full w-full">
-  {
-    images.map(({ data }) => (
-      <div
-        id={`map-image-${data.id}`}
-        class="transition-opacity duration-700 opacity-0 absolute top-0 left-0"
-      >
-        <Image
-          src={data.file}
-          alt="Astro logo"
-          height={700}
-          quality={'max'}
-          class="w-full"
-        />
+  <div id="image-drawer" class="relative bg-slate-50 z-[100] h-full w-full overflow-y-scroll overflow-x-hidden scroll-smooth scrollbar-hide">
+    {
+      images.map(({ data }) => (
+        <div id={`image-${data.id}`} class="transition-opacity duration-700 opacity-0 absolute top-0 left-0 p-6 pb-20">
+          <Image src={data.file} alt="Astro logo" densities={[1, 2]} height={650} quality={'max'} />
 
-        <h2 class="mt-4">{data.title}</h2>
-        <p class="text-black/40">{data.description}</p>
-      </div>
-    ))
-  }
+          <h2 class="mt-4">{data.title}</h2>
+          <p class="text-black/40">{data.description}</p>
+        </div>
+      ))
+    }
+    <button id="close-image-drawer-button" class="absolute top-0 right-0">
+      <Image src={CloseIcon} alt="Close image" width={24} height={24} />
+    </button>
+  </div>
 </div>
-</div>
+<div id="image-drawer-container" class="fixed top-0 left-0 bottom-0 right-0 bg-white/60"></div>
 <script>
-  const images = document.querySelectorAll(".gallery-image");
-  const gallery = document.getElementById("gallery");
+  const images = document.querySelectorAll('.gallery-image')
+  const gallery = document.getElementById('gallery')
+  const imageDrawer = document.getElementById('image-drawer')
+  const imageDrawerContainer = document.getElementById('image-drawer-container')
 
-  gallery?.addEventListener("scroll", () => {
+  window.addEventListener('click', (e) => {
+    let isImageClick = false
     images.forEach((image) => {
-      const imageTop = image.getBoundingClientRect().top;
-      const imageBottom = image.getBoundingClientRect().bottom;
-      const mapImage = document.getElementById(`map-image-${image.id}`);
-      if (imageTop > 0 && imageBottom < window.innerHeight) {
-        image.classList.add("active");
-        mapImage?.classList.remove("opacity-0");
-        mapImage?.classList.add("opacity-100");
-      } else {
-        image.classList.remove("active");
-        mapImage?.classList.remove("opacity-100");
-        mapImage?.classList.add("opacity-0");
+      if (image.contains(e.target as Node)) {
+        isImageClick = true
       }
-    });
-  });
+    })
+
+    if (!imageDrawer?.contains(e.target as Node) && !isImageClick) {
+      imageDrawer?.classList.remove('active')
+      imageDrawerContainer?.classList.remove('active')
+    }
+  })
+
+  images.forEach((image) => {
+    if (image.id) {
+      image.addEventListener('click', () => {
+        imageDrawer?.classList.add('active')
+        imageDrawerContainer?.classList.add('active')
+      })
+    }
+  })
+
+  gallery?.addEventListener('scroll', () => {
+    images.forEach((image) => {
+      const imageTop = image.getBoundingClientRect().top
+      const imageBottom = image.getBoundingClientRect().bottom
+      const id = image.id.replace('thumbnail-', 'image-')
+      const fullSizeImage = document.getElementById(id)
+      const windowCenter = window.innerHeight / 2
+      const imageCenter = (imageTop + imageBottom) / 2
+      const threshold = 200
+      if (imageCenter > windowCenter - threshold && imageCenter < windowCenter + threshold) {
+        image.classList.add('active')
+        fullSizeImage?.classList.remove('opacity-0')
+        fullSizeImage?.classList.add('opacity-100')
+      } else {
+        image.classList.remove('active')
+        fullSizeImage?.classList.remove('opacity-100')
+        fullSizeImage?.classList.add('opacity-0')
+      }
+    })
+  })
 </script>
 
 <style is:global>
+  #image-drawer {
+    transform: translateY(0);
+    transition: transform 0.3s ease-in-out;
+  }
+
+  #image-drawer.active {
+    transform: translateY(-100%);
+    transition: transform 0.3s ease-in-out;
+  }
+
+  #image-drawer-container {
+    z-index: -1;
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out;
+  }
+
+  #image-drawer-container.active {
+    z-index: 50;
+    opacity: 1;
+    transition: opacity 0.2s ease-in-out;
+  }
+
   .gallery-image {
     position: relative;
   }
 
   .gallery-image::after {
-    content: "";
+    content: '';
     position: absolute;
     top: 0;
     left: 0;

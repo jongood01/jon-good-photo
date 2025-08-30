@@ -1,27 +1,27 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @font-face {
-  font-family: "SpaceGrotesk";
-  src: url(/fonts/Space_Grotesk/SpaceGrotesk.ttf) format("truetype");
+  font-family: 'SpaceGrotesk';
+  src: url(/fonts/Space_Grotesk/SpaceGrotesk.ttf) format('truetype');
   font-display: swap;
 }
 
 @font-face {
-  font-family: "SpaceMono";
-  src: url(/fonts/Space_Mono/SpaceMono-Regular.ttf) format("truetype");
+  font-family: 'SpaceMono';
+  src: url(/fonts/Space_Mono/SpaceMono-Regular.ttf) format('truetype');
   font-weight: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: "SpaceMono";
-  src: url(/fonts/Space_Mono/SpaceMono-Bold.ttf) format("truetype");
+  font-family: 'SpaceMono';
+  src: url(/fonts/Space_Mono/SpaceMono-Bold.ttf) format('truetype');
   font-weight: bold;
   font-display: swap;
 }
 
 @theme {
-  --font-sans: "SpaceMono", sans-serif;
+  --font-sans: 'SpaceMono', sans-serif;
   --color-pureblue: oklch(0.452 0.313214 264.052);
 }
 
