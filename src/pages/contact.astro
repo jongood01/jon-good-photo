@@ -1,11 +1,183 @@
 ---
 import Layout from '../layouts/Layout.astro'
 import Header from '../components/Header.astro'
+import Input from '../components/Input.astro'
+import Button from '../components/Button.astro'
+import { getCollection } from 'astro:content'
+
+// Get all photos for client-side access
+const photos = await getCollection('photos')
 ---
 
-<Layout>
+<Layout title="Contact - Jon Good Photography">
   <Header />
-  <div class="flex flex-col items-center justify-center">
-    <h1>Contact</h1>
-  </div>
+  <main class="min-h-screen bg-white">
+    <div class="max-w-2xl mx-auto px-6 py-12">
+      <div class="text-center mb-12">
+        <h1 class="text-4xl font-bold text-gray-900 mb-4">Get in Touch</h1>
+        <p class="text-lg text-gray-600">I'd love to hear from you about your photography needs or just to connect.</p>
+      </div>
+
+      <form id="contact-form" class="space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Input type="text" label="Name" name="name" required placeholder="Your full name" />
+
+          <Input type="email" label="Email" name="email" required placeholder="your@email.com" />
+        </div>
+
+        <Input type="text" label="Subject" name="subject" required placeholder="What's this about?" />
+
+        <Input label="Message" name="message" required rows={6} placeholder="Tell me about your project or inquiry..." />
+
+        <div id="photo-reference-container"></div>
+
+        <div class="flex items-center justify-between pt-4">
+          <Button type="submit" id="submit-btn" variant="primary" size="lg"> Send Message </Button>
+        </div>
+      </form>
+
+      <div id="form-message" class="mt-6 hidden"></div>
+    </div>
+  </main>
+
+  <script
+    define:vars={{
+      photosData: photos.map((photo) => ({
+        id: photo.data.id,
+        title: photo.data.title,
+        description: photo.data.description,
+        altText: photo.data.altText,
+        thumbnail: photo.data.thumbnail.src,
+      })),
+    }}
+  >
+    const RECAPTCHA_SITE_KEY = '6LeYEMwrAAAAAIejgqpzaCV4lO1JTAIE3MuHQyZL'
+    const CONTACT_FUNCTION_URL = 'https://submitcontactform-jx2ifnu4jq-uc.a.run.app'
+
+    // Initialize form
+    document.addEventListener('DOMContentLoaded', () => {
+      const script = document.createElement('script')
+      script.src = `https://www.google.com/recaptcha/api.js?render=${RECAPTCHA_SITE_KEY}`
+      document.head.appendChild(script)
+
+      const form = document.getElementById('contact-form')
+      const submitBtn = document.getElementById('submit-btn')
+      const messageDiv = document.getElementById('form-message')
+      const photoContainer = document.getElementById('photo-reference-container')
+
+      // Check for photo ID in URL and display photo
+      function displayPhotoReference() {
+        const urlParams = new URLSearchParams(window.location.search)
+        const photoId = urlParams.get('photo')
+
+        if (photoId) {
+          const photo = photosData.find((p) => p.id === photoId)
+          if (photo) {
+            photoContainer.innerHTML = `
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Photo Reference</label>
+                <div class="flex items-center gap-4 p-4 bg-gray-50 rounded-lg border">
+                  <img src="${photo.thumbnail}" alt="${photo.altText}" class="w-16 h-16 object-cover rounded-lg" />
+                  <div class="flex-1">
+                    <h3 class="font-medium text-gray-900">${photo.title}</h3>
+                    <p class="text-sm text-gray-600">${photo.description}</p>
+                  </div>
+                  <button type="button" id="remove-photo" class="text-gray-400 hover:text-gray-600 transition-colors" title="Remove photo reference">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                    </svg>
+                  </button>
+                </div>
+                <input type="hidden" name="photo-id" value="${photo.id}" />
+                <input type="hidden" name="photo-title" value="${photo.title}" />
+              </div>
+            `
+
+            // Add remove functionality
+            const removeBtn = document.getElementById('remove-photo')
+            if (removeBtn) {
+              removeBtn.addEventListener('click', () => {
+                const url = new URL(window.location.href)
+                url.searchParams.delete('photo')
+                window.location.href = url.toString()
+              })
+            }
+          }
+        }
+      }
+
+      displayPhotoReference()
+
+      function showMessage(text, type) {
+        messageDiv.className = `mt-6 p-4 rounded-lg ${type === 'success' ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-red-50 text-red-800 border border-red-200'}`
+        messageDiv.textContent = text
+        messageDiv.classList.remove('hidden')
+      }
+
+      function hideMessage() {
+        messageDiv.classList.add('hidden')
+      }
+
+      async function handleSubmit(e) {
+        e.preventDefault()
+        hideMessage()
+
+        submitBtn.disabled = true
+        submitBtn.textContent = 'Sending...'
+
+        try {
+          // Get reCAPTCHA token
+          const token = await window.grecaptcha.execute(RECAPTCHA_SITE_KEY, { action: 'contact_form' })
+
+          // Prepare form data
+          const formData = new FormData(form)
+          const photoId = formData.get('photo-id')
+          const photoTitle = formData.get('photo-title')
+
+          const requestBody = {
+            name: formData.get('name'),
+            email: formData.get('email'),
+            subject: formData.get('subject'),
+            message: formData.get('message'),
+            recaptchaToken: token,
+            ...(photoId && photoTitle && { photo: { id: photoId, title: photoTitle } }),
+          }
+
+          // Submit to HTTPS function
+          const response = await fetch(CONTACT_FUNCTION_URL, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(requestBody),
+          })
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`)
+          }
+
+          const result = await response.json()
+
+          showMessage('Thank you! Your message has been sent successfully.', 'success')
+          form.reset()
+        } catch (error) {
+          console.error('Error sending message:', error)
+
+          let errorMessage = 'Sorry, there was an error sending your message. Please try again.'
+          if (error.message.includes('400')) {
+            errorMessage = 'Please check that all fields are filled out correctly.'
+          } else if (error.message.includes('403')) {
+            errorMessage = 'Security verification failed. Please try again.'
+          }
+
+          showMessage(errorMessage, 'error')
+        } finally {
+          submitBtn.disabled = false
+          submitBtn.textContent = 'Send Message'
+        }
+      }
+
+      form.addEventListener('submit', handleSubmit)
+    })
+  </script>
 </Layout>

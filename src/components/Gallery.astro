@@ -3,32 +3,39 @@ import { Image } from 'astro:assets'
 import { getCollection } from 'astro:content'
 import gradient from '../assets/gradient.svg'
 import CloseIcon from '../assets/close-icon.svg'
+import ArrowDownIcon from '../assets/arrow-down-icon.svg'
 const images = await getCollection('photos')
 ---
 
-<div class="lg:flex h-full gap-6">
+<section class="lg:flex h-screen gap-6 snap-start snap-always max-w-[1920px] mx-auto">
   <div
     id="gallery"
     class="w-full max-w-[470px] py-10 overflow-y-scroll scroll-smooth px-5 lg:px-10 h-full flex flex-col gap-5 snap-mandatory snap-y scrollbar-hide"
   >
-    <div class="gallery-image max-w-[450px] snap-center snap-always">
-      <Image src={gradient} alt="gradient" width={450} height={450} loading="eager" />
+    <div class="gallery-image max-w-[320px] snap-center snap-always">
+      <Image src={gradient} alt="gradient" width={320} height={320} loading="eager" />
+      <div class="absolute bottom-2 left-0 right-0 text-center text-white text-sm">
+        Scroll down <Image src={ArrowDownIcon} class="text-white inline-block" alt="scroll down" width={24} height={24} />
+      </div>
     </div>
 
     {
       images.map(({ data }, index) => (
         <div class="w-fit">
-          <button id={`thumbnail-${data.id}`} class="gallery-image thumbnail max-w-[450px] snap-center snap-always">
+          <button id={`thumbnail-${data.id}`} class="gallery-image thumbnail max-w-[320px] snap-center snap-always">
             <Image
               src={data.thumbnail}
               alt={data.altText || 'an image test'}
-              width={450}
-              height={450}
+              width={320}
+              height={320}
               quality={'max'}
               loading={index === 0 ? 'eager' : 'lazy'}
             />
           </button>
-          <div class="h-6 w-full relative left-full origin-top-left -rotate-90 flex justify-between">
+          <div
+            id={`format-${data.id}`}
+            class="h-6 w-full relative left-full origin-top-left -rotate-90 flex justify-between transition-opacity duration-700 opacity-0"
+          >
             <div>{data.format}</div>
             <div>
               {data.collectionIndex} • {data.categoryIndex} • {data.imageIndex}
@@ -37,18 +44,38 @@ const images = await getCollection('photos')
         </div>
       ))
     }
-    <div class="gallery-image max-w-[450px] snap-center snap-always">
-      <Image src={gradient} alt="gradient" width={450} height={450} loading="lazy" />
+    <div class="gallery-image max-w-[320px] snap-center snap-always">
+      <Image src={gradient} alt="gradient" width={320} height={320} loading="lazy" />
     </div>
   </div>
   <div id="image-drawer" class="relative bg-slate-50 z-[100] h-full w-full overflow-y-scroll overflow-x-hidden scroll-smooth scrollbar-hide">
     {
       images.map(({ data }) => (
-        <div id={`image-${data.id}`} class="transition-opacity duration-700 opacity-0 absolute top-0 left-0 p-8 lg:p-6 pb-20">
-          <Image src={data.file} alt="Astro logo" densities={[1, 2]} height={650} quality={'max'} />
-
-          <h2 class="mt-4">{data.title}</h2>
-          <p class="text-black/40">{data.description}</p>
+        <div
+          id={`image-${data.id}`}
+          class="transition-opacity duration-700 opacity-0 absolute top-0 left-0 right-0 bottom-0 flex flex-col justify-center p-8 lg:p-6 pb-20"
+        >
+          <div class="w-full">
+            <Image
+              src={data.file}
+              alt={data.aspectRatio}
+              widths={
+                data.aspectRatio === '1:1'
+                  ? [650, 1300]
+                  : data.aspectRatio === '3:2'
+                    ? [975, 1950]
+                    : data.aspectRatio === '16:9'
+                      ? [1156, 2312]
+                      : [650, 1300]
+              }
+              height={650}
+              sizes="(width <= 500px) 200px, (width <= 768px) 650px"
+              quality={'high'}
+              class="w-full h-auto object-contain"
+            />
+            <h2 class="mt-4">{data.title}</h2>
+            <p class="text-black/40">{data.description}</p>
+          </div>
         </div>
       ))
     }
@@ -56,7 +83,7 @@ const images = await getCollection('photos')
       <Image src={CloseIcon} alt="Close" width={24} height={24} loading="lazy" />
     </button>
   </div>
-</div>
+</section>
 <div id="image-drawer-container" class="fixed top-0 left-0 bottom-0 right-0 bg-white/60"></div>
 <script>
   const images = document.querySelectorAll<HTMLButtonElement>('.gallery-image')
@@ -128,12 +155,43 @@ const images = await getCollection('photos')
     addListeners()
   }
 
+  // Header visibility logic
+  const header = document.getElementById('header')
+  const heroSection = document.querySelector('section:nth-child(2)') // Hero section (Header, Hero, Gallery)
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          // Hero is visible - hide header (fade out: 200ms)
+          if (header) {
+            header.style.transition = 'opacity 200ms ease-in-out'
+            header.style.opacity = '0'
+          }
+        } else {
+          // Hero is not visible - show header (fade in: 600ms)
+          if (header) {
+            header.style.transition = 'opacity 600ms ease-in-out'
+            header.style.opacity = '1'
+          }
+        }
+      })
+    },
+    { threshold: 0.1 }
+  )
+
+  if (heroSection) {
+    observer.observe(heroSection)
+  }
+
   gallery?.addEventListener('scroll', () => {
     images.forEach((image) => {
       const imageTop = image.getBoundingClientRect().top
       const imageBottom = image.getBoundingClientRect().bottom
       const id = image.id.replace('thumbnail-', 'image-')
+      const formatId = image.id.replace('thumbnail-', 'format-')
       const fullSizeImage = document.getElementById(id)
+      const formatDiv = document.getElementById(formatId)
       const windowCenter = window.innerHeight / 2
       const imageCenter = (imageTop + imageBottom) / 2
       const threshold = 200
@@ -141,10 +199,14 @@ const images = await getCollection('photos')
         image.classList.add('active')
         fullSizeImage?.classList.remove('opacity-0')
         fullSizeImage?.classList.add('opacity-100')
+        formatDiv?.classList.remove('opacity-0')
+        formatDiv?.classList.add('opacity-100')
       } else {
         image.classList.remove('active')
         fullSizeImage?.classList.remove('opacity-100')
         fullSizeImage?.classList.add('opacity-0')
+        formatDiv?.classList.remove('opacity-100')
+        formatDiv?.classList.add('opacity-0')
       }
     })
   })

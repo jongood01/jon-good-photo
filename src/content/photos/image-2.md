@@ -9,4 +9,5 @@
 'collectionIndex': 1
 'categoryIndex': 0
 'imageIndex': 1
+'aspectRatio': '1:1'
 ---

@@ -29,6 +29,7 @@ const photos = defineCollection({
       collectionIndex: z.number(),
       categoryIndex: z.number(),
       imageIndex: z.number(),
+      aspectRatio: z.enum(['1:1', '3:2', '16:9']),
     }),
 })
 

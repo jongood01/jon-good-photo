@@ -8,6 +8,9 @@ import tailwindcss from '@tailwindcss/vite'
 export default defineConfig({
   site: 'https://jongood.photo',
   integrations: [sitemap()],
+  image: {
+    responsiveStyles: true,
+  },
 
   vite: {
     plugins: [tailwindcss()],

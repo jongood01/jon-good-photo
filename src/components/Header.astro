@@ -3,11 +3,11 @@ import Nav from '../components/Nav.astro'
 import Logo from '../components/Logo.astro'
 ---
 
-<header class="flex relative">
-  <div class="w-full max-w-[480px]">
+<header id="header" class="flex" style="opacity: 0; transition: opacity 400ms ease-in-out;">
+  <div class="w-full max-w-[480px] relative">
     <Logo />
   </div>
-  <div class="">
+  <div class="relative">
     <Nav />
   </div>
 </header>
