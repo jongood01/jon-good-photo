@@ -7,7 +7,7 @@ import ArrowDownIcon from '../assets/arrow-down-icon.svg'
 const images = await getCollection('photos')
 ---
 
-<section class="lg:flex h-screen gap-6 snap-start snap-always max-w-[1920px] mx-auto">
+<section id="gallery-section" class="lg:flex h-screen gap-6 snap-start snap-always">
   <div
     id="gallery"
     class="w-full max-w-[470px] py-10 overflow-y-scroll scroll-smooth px-5 lg:px-10 h-full flex flex-col gap-5 snap-mandatory snap-y scrollbar-hide"
@@ -30,6 +30,7 @@ const images = await getCollection('photos')
               height={320}
               quality={'max'}
               loading={index === 0 ? 'eager' : 'lazy'}
+              oncontextmenu="return false"
             />
           </button>
           <div
@@ -71,7 +72,9 @@ const images = await getCollection('photos')
               height={650}
               sizes="(width <= 500px) 200px, (width <= 768px) 650px"
               quality={'high'}
+              style={{ maxHeight: 'calc(100vh - 200px)' }}
               class="w-full h-auto object-contain"
+              oncontextmenu="return false"
             />
             <h2 class="mt-4">{data.title}</h2>
             <p class="text-black/40">{data.description}</p>
@@ -156,33 +159,21 @@ const images = await getCollection('photos')
   }
 
   // Header visibility logic
-  const header = document.getElementById('header')
-  const heroSection = document.querySelector('section:nth-child(2)') // Hero section (Header, Hero, Gallery)
+  const logo = document.getElementById('logo')
+  const main = document.getElementsByTagName('main')[0]
+  const footer = document.getElementsByTagName('footer')[0]
+  const gallerySection = document.getElementById('gallery-section')
 
-  const observer = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          // Hero is visible - hide header (fade out: 200ms)
-          if (header) {
-            header.style.transition = 'opacity 200ms ease-in-out'
-            header.style.opacity = '0'
-          }
-        } else {
-          // Hero is not visible - show header (fade in: 600ms)
-          if (header) {
-            header.style.transition = 'opacity 600ms ease-in-out'
-            header.style.opacity = '1'
-          }
-        }
-      })
-    },
-    { threshold: 0.1 }
-  )
-
-  if (heroSection) {
-    observer.observe(heroSection)
-  }
+  main?.addEventListener('scroll', () => {
+    if (!footer || !gallerySection || !main || !logo) return
+    if (main.scrollTop >= gallerySection.offsetTop) {
+      footer.style.opacity = '1'
+      logo.style.opacity = '1'
+    } else {
+      footer.style.opacity = '0'
+      logo.style.opacity = '0'
+    }
+  })
 
   gallery?.addEventListener('scroll', () => {
     images.forEach((image) => {

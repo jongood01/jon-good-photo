@@ -3,6 +3,6 @@ import { Image } from 'astro:assets'
 import logoImage from '../assets/Logo.svg'
 ---
 
-<h1 class="fixed top-5 left-10 mix-blend-difference font-heading font-black text-pureblue z-20">
+<h1 id="logo" class="fixed top-5 left-10 mix-blend-difference text-pureblue z-[100]" style="opacity: 0; transition: opacity 400ms ease-in-out;">
   <Image src={logoImage} alt="Jon Good Photography" width={450} loading="eager" />
 </h1>
