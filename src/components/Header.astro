@@ -1,13 +1,40 @@
 ---
 import Nav from '../components/Nav.astro'
 import Logo from '../components/Logo.astro'
+import { Image } from 'astro:assets'
+import MenuIcon from '../assets/menu-icon.svg'
+
+const { isHidden = false } = Astro.props
 ---
 
-<header id="header" class="flex">
-  <div class="w-full max-w-[480px] relative">
-    <Logo />
-  </div>
-  <div class="relative">
+<header
+  id="header"
+  class={`flex justify-between items-center px-6 lg:px-10 absolute top-0 left-0 right-0 h-[120px] z-[1000] bg-white transition-opacity duration-400 ease-in-out ${isHidden ? 'opacity-0' : 'opacity-100'}`}
+>
+  <Logo />
+  <button id="menu-button" title="Menu button" class="cursor-pointer color-pureblue lg:hidden">
+    <Image src={MenuIcon} alt="Menu" class="w-9 h-9" />
+  </button>
+  <div class="relative hidden lg:block">
     <Nav />
   </div>
 </header>
+
+<div id="mobile-nav-menu" class="absolute hidden top-[120px] bg-white w-full z-[1000]">
+  <Nav />
+</div>
+
+<script>
+  const menuButton = document.getElementById('menu-button')
+  const menu = document.querySelector('#mobile-nav-menu')
+
+  menuButton?.addEventListener('click', () => {
+    menu?.classList.toggle('hidden')
+  })
+
+  window.addEventListener('click', (e) => {
+    if (!menu?.contains(e.target as Node) && !menuButton?.contains(e.target as Node)) {
+      menu?.classList.add('hidden')
+    }
+  })
+</script>

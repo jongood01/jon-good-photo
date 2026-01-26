@@ -1,16 +1,17 @@
 ---
 import { Image } from 'astro:assets'
 import { getCollection } from 'astro:content'
+import Button from './Button.astro'
 import gradient from '../assets/gradient.svg'
 import CloseIcon from '../assets/close-icon.svg'
 import ArrowDownIcon from '../assets/arrow-down-icon.svg'
 const images = await getCollection('photos')
 ---
 
-<section id="gallery-section" class="lg:flex h-screen gap-6 snap-start snap-always">
+<section id="gallery" class="lg:flex h-screen gap-6 snap-start snap-always">
   <div
-    id="gallery"
-    class="w-full max-w-[470px] py-10 overflow-y-scroll scroll-smooth px-5 lg:px-10 h-full flex flex-col gap-5 snap-mandatory snap-y scrollbar-hide"
+    id="gallery-container"
+    class="w-full max-w-[370px] pb-10 pt-[120px] overflow-y-scroll scroll-smooth px-5 lg:px-10 h-full flex flex-col gap-8 snap-mandatory snap-y scrollbar-hide"
   >
     <div class="gallery-image max-w-[320px] snap-center snap-always">
       <Image src={gradient} alt="gradient" width={320} height={320} loading="eager" />
@@ -21,7 +22,7 @@ const images = await getCollection('photos')
 
     {
       images.map(({ data }, index) => (
-        <div class="w-fit">
+        <div class="w-fit flex relative">
           <button id={`thumbnail-${data.id}`} class="gallery-image thumbnail max-w-[320px] snap-center snap-always">
             <Image
               src={data.thumbnail}
@@ -35,7 +36,7 @@ const images = await getCollection('photos')
           </button>
           <div
             id={`format-${data.id}`}
-            class="h-6 w-full relative left-full origin-top-left -rotate-90 flex justify-between transition-opacity duration-700 opacity-0"
+            class="h-6 w-full absolute top-full left-full right-0 origin-top-left -rotate-90 flex justify-between transition-opacity duration-700 opacity-0"
           >
             <div>{data.format}</div>
             <div>
@@ -49,12 +50,12 @@ const images = await getCollection('photos')
       <Image src={gradient} alt="gradient" width={320} height={320} loading="lazy" />
     </div>
   </div>
-  <div id="image-drawer" class="relative bg-slate-50 z-[100] h-full w-full overflow-y-scroll overflow-x-hidden scroll-smooth scrollbar-hide">
+  <div id="image-drawer" class="relative bg-white z-[100] h-full w-full overflow-y-scroll overflow-x-hidden scroll-smooth scrollbar-hide">
     {
       images.map(({ data }) => (
         <div
           id={`image-${data.id}`}
-          class="transition-opacity duration-700 opacity-0 absolute top-0 left-0 right-0 bottom-0 flex flex-col justify-center p-8 lg:p-6 pb-20"
+          class="transition-opacity duration-700 opacity-0 absolute top-0 lg:top-[120px] left-0 right-0 bottom-10 px-6 pb-20"
         >
           <div class="w-full">
             <Image
@@ -72,12 +73,16 @@ const images = await getCollection('photos')
               height={650}
               sizes="(width <= 500px) 200px, (width <= 768px) 650px"
               quality={'high'}
-              style={{ maxHeight: 'calc(100vh - 200px)' }}
-              class="w-full h-auto object-contain"
+              style={{ maxHeight: 'calc(100vh - 250px)' }}
+              class="w-full h-auto object-contain object-left-top"
               oncontextmenu="return false"
             />
-            <h2 class="mt-4">{data.title}</h2>
-            <p class="text-black/40">{data.description}</p>
+
+            <div class="pb-10">
+              <h2 class="mt-4">{data.title}</h2>
+              <p class="text-black/40 pb-4">{data.description}</p>
+              <Button href={`/contact?photo=${data.id}`}>Enquire</Button>
+            </div>
           </div>
         </div>
       ))
@@ -90,7 +95,7 @@ const images = await getCollection('photos')
 <div id="image-drawer-container" class="fixed top-0 left-0 bottom-0 right-0 bg-white/60"></div>
 <script>
   const images = document.querySelectorAll<HTMLButtonElement>('.gallery-image')
-  const gallery = document.getElementById('gallery')
+  const gallery = document.getElementById('gallery-container')
   const imageDrawer = document.getElementById('image-drawer')
   const imageDrawerContainer = document.getElementById('image-drawer-container')
   const closeImageDrawerButton = document.getElementById('close-image-drawer-button')
@@ -158,20 +163,20 @@ const images = await getCollection('photos')
     addListeners()
   }
 
-  // Header visibility logic
-  const logo = document.getElementById('logo')
+  // Header and footer visibility logic
+  const header = document.getElementById('header')
   const main = document.getElementsByTagName('main')[0]
   const footer = document.getElementsByTagName('footer')[0]
-  const gallerySection = document.getElementById('gallery-section')
+  const gallerySection = document.getElementById('gallery')
 
   main?.addEventListener('scroll', () => {
-    if (!footer || !gallerySection || !main || !logo) return
+    if (!footer || !gallerySection || !main || !header) return
     if (main.scrollTop >= gallerySection.offsetTop) {
       footer.style.opacity = '1'
-      logo.style.opacity = '1'
+      header.style.opacity = '1'
     } else {
       footer.style.opacity = '0'
-      logo.style.opacity = '0'
+      header.style.opacity = '0'
     }
   })
 
@@ -237,7 +242,7 @@ const images = await getCollection('photos')
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.7);
+    background: rgba(0, 0, 0, 0.6);
     transition: background 0.5s ease-in;
   }
 

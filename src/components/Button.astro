@@ -3,48 +3,41 @@ export interface Props {
   type?: 'button' | 'submit' | 'reset'
   variant?: 'primary' | 'secondary' | 'ghost'
   size?: 'sm' | 'md' | 'lg'
+  href?: string
   disabled?: boolean
   class?: string
   id?: string
   [key: string]: any
 }
 
-const {
-  type = 'button',
-  variant = 'primary',
-  size = 'md',
-  disabled = false,
-  class: className = '',
-  ...rest
-} = Astro.props
+const { type = 'button', variant = 'primary', size = 'md', disabled = false, class: className = '', href, ...rest } = Astro.props
 
-const baseClasses = 'font-medium rounded-lg transition-colors focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed'
+const baseClasses =
+  'font-medium rounded-lg transition-colors focus:ring-2 focus:ring-offset-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed'
 
 const variantClasses = {
-  primary: 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500',
+  primary: 'bg-pureblue text-white hover:bg-blue-700 focus:ring-blue-500',
   secondary: 'bg-gray-600 text-white hover:bg-gray-700 focus:ring-gray-500',
-  ghost: 'bg-transparent text-gray-700 hover:bg-gray-100 focus:ring-gray-500 border border-gray-300'
+  ghost: 'bg-transparent text-gray-700 hover:bg-gray-100 focus:ring-gray-500 border border-gray-300',
 }
 
 const sizeClasses = {
   sm: 'px-4 py-2 text-sm',
   md: 'px-6 py-3',
-  lg: 'px-8 py-4 text-lg'
+  lg: 'px-8 py-4 text-lg',
 }
 
-const combinedClasses = [
-  baseClasses,
-  variantClasses[variant],
-  sizeClasses[size],
-  className
-].filter(Boolean).join(' ')
+const combinedClasses = [baseClasses, variantClasses[variant], sizeClasses[size], className].filter(Boolean).join(' ')
 ---
 
-<button
-  type={type}
-  disabled={disabled}
-  class={combinedClasses}
-  {...rest}
->
-  <slot />
-</button>
+{
+  href ? (
+    <a href={href} class={combinedClasses} {...rest}>
+      <slot />
+    </a>
+  ) : (
+    <button type={type} disabled={disabled} class={combinedClasses} {...rest}>
+      <slot />
+    </button>
+  )
+}

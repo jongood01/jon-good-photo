@@ -12,7 +12,7 @@ const photos = await getCollection('photos')
 
 <Layout title="Contact - Jon Good Photography">
   <Header />
-  <div class="max-w-2xl mx-auto px-6 py-12">
+  <div class="pt-[120px] max-w-2xl mx-auto px-6 pb-12">
     <div class="text-center mb-12">
       <h1 class="text-4xl font-bold text-gray-900 mb-4">Get in Touch</h1>
       <p class="text-lg text-gray-600">I'd love to hear from you about your photography needs or just to connect.</p>
@@ -66,9 +66,6 @@ const photos = await getCollection('photos')
     const submitBtn = document.getElementById('submit-btn')
     const messageDiv = document.getElementById('form-message')
     const photoContainer = document.getElementById('photo-reference-container')
-
-    // Fade in header
-    header.style.opacity = '1'
 
     // Check for photo ID in URL and display photo
     function displayPhotoReference() {

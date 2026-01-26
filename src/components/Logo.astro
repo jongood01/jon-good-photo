@@ -1,8 +1,8 @@
 ---
 import { Image } from 'astro:assets'
-import logoImage from '../assets/Logo.svg'
+import logoImage from '../assets/logo.svg'
 ---
 
-<h1 id="logo" class="fixed top-5 left-10 mix-blend-difference text-pureblue z-[100]" style="opacity: 0; transition: opacity 400ms ease-in-out;">
-  <Image src={logoImage} alt="Jon Good Photography" width={450} loading="eager" />
-</h1>
+<a href="/#gallery" id="logo" class="bg-pureblue">
+  <Image src={logoImage} alt="Jon Good Photography" height={100} loading="eager" />
+</a>

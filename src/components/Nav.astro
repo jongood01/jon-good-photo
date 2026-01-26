@@ -1,38 +1,21 @@
 ---
-import { Image } from 'astro:assets'
-import MenuIcon from '../assets/menu-icon.svg'
+const pathname = Astro.url.pathname
 ---
 
-<div id="nav" class="relative" style="opacity: 0; transition: opacity 400ms ease-in-out;">
-  <button id="menu-button" title="Menu button" class="cursor-pointer lg:hidden">
-    <Image src={MenuIcon} alt="Menu" class="w-9 h-9" />
-  </button>
-  <nav class="hidden lg:fixed top-16 left-0 bg-white z-[200] w-full lg:bg-inherit lg:top-auto lg:right-auto">
-    <ul class="flex lg:flex-row flex-col gap-4 py-4 px-8">
-      <li>
-        <a href="/" class="text-pureblue text-lg">Home</a>
-      </li>
-      <li>
-        <a href="/about" class="text-pureblue text-lg">About</a>
-      </li>
-      <li>
-        <a href="/contact" class="text-pureblue text-lg">Contact</a>
-      </li>
-    </ul>
-  </nav>
-</div>
-
-<script>
-  const menuButton = document.getElementById('menu-button')
-  const menu = document.querySelector('nav')
-
-  menuButton?.addEventListener('click', () => {
-    menu?.classList.toggle('hidden')
-  })
-
-  window.addEventListener('click', (e) => {
-    if (!menu?.contains(e.target as Node) && !menuButton?.contains(e.target as Node)) {
-      menu?.classList.add('hidden')
-    }
-  })
-</script>
+<nav id="nav" class="">
+  <ul class="flex flex-col lg:flex-row gap-6 py-4 px-8">
+    <li>
+      <a href="/#gallery" class:list={['text-pureblue text-lg underline-offset-4', { underline: pathname === '/' }]}>Home</a>
+    </li>
+    <li>
+      <a href="/about" class:list={['text-pureblue text-lg underline-offset-4', { underline: pathname === '/about' || pathname === '/about/' }]}
+        >About</a
+      >
+    </li>
+    <li>
+      <a href="/contact" class:list={['text-pureblue text-lg underline-offset-4', { underline: pathname === '/contact' || pathname === '/contact/' }]}
+        >Contact</a
+      >
+    </li>
+  </ul>
+</nav>
