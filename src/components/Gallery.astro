@@ -55,7 +55,7 @@ const images = await getCollection('photos')
       images.map(({ data }) => (
         <div
           id={`image-${data.id}`}
-          class="transition-opacity duration-700 opacity-0 absolute top-0 lg:top-[120px] left-0 right-0 bottom-10 px-6 pb-20"
+          class="transition-opacity duration-700 opacity-0 absolute top-20 lg:top-[120px] left-0 right-0 bottom-10 px-6 pb-20"
         >
           <div class="w-full">
             <Image
@@ -216,6 +216,7 @@ const images = await getCollection('photos')
 
   #image-drawer.active {
     transform: translateY(-100%);
+    z-index: 1200;
     transition: transform 0.3s ease-in-out;
   }
 
@@ -226,7 +227,7 @@ const images = await getCollection('photos')
   }
 
   #image-drawer-container.active {
-    z-index: 50;
+    z-index: 1000;
     opacity: 1;
     transition: opacity 0.2s ease-in-out;
   }

@@ -1,21 +1,18 @@
 ---
 const pathname = Astro.url.pathname
+const linkClasses = 'block lg:w-auto text-center lg:text-left text-pureblue text-lg underline-offset-4'
 ---
 
-<nav id="nav" class="">
+<nav id="nav" class="w-full lg:w-auto">
   <ul class="flex flex-col lg:flex-row gap-6 py-4 px-8">
-    <li>
-      <a href="/#gallery" class:list={['text-pureblue text-lg underline-offset-4', { underline: pathname === '/' }]}>Home</a>
+    <li class="w-full lg:w-auto">
+      <a href="/#gallery" class:list={[linkClasses, { underline: pathname === '/' }]}>Home</a>
     </li>
-    <li>
-      <a href="/about" class:list={['text-pureblue text-lg underline-offset-4', { underline: pathname === '/about' || pathname === '/about/' }]}
-        >About</a
-      >
+    <li class="w-full lg:w-auto">
+      <a href="/about" class:list={[linkClasses, { underline: pathname === '/about' || pathname === '/about/' }]}>About</a>
     </li>
-    <li>
-      <a href="/contact" class:list={['text-pureblue text-lg underline-offset-4', { underline: pathname === '/contact' || pathname === '/contact/' }]}
-        >Contact</a
-      >
+    <li class="w-full lg:w-auto">
+      <a href="/contact" class:list={[linkClasses, { underline: pathname === '/contact' || pathname === '/contact/' }]}>Contact</a>
     </li>
   </ul>
 </nav>
