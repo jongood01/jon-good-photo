@@ -13,26 +13,25 @@ const photos = await getCollection('photos')
 <Layout title="Contact - Jon Good Photography">
   <Header />
   <div class="pt-[120px] max-w-2xl mx-auto px-6 pb-12">
-    <div class="text-center mb-12">
-      <h1 class="text-4xl font-bold text-gray-900 mb-4">Get in Touch</h1>
-      <p class="text-lg text-gray-600">I'd love to hear from you about your photography needs or just to connect.</p>
+    <div class="mb-10">
+      <h1 class="text-4xl font-bold text-gray-900 mb-4">Get in touch</h1>
     </div>
 
     <form id="contact-form" class="space-y-6">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Input type="text" label="Name" name="name" required placeholder="Your full name" />
+        <Input type="text" label="Name" name="name" required />
 
-        <Input type="email" label="Email" name="email" required placeholder="your@email.com" />
+        <Input type="email" label="Email" name="email" required />
       </div>
 
-      <Input type="text" label="Subject" name="subject" required placeholder="What's this about?" />
+      <Input type="text" label="Subject" name="subject" />
 
-      <Input label="Message" name="message" required rows={6} placeholder="Tell me about your project or inquiry..." />
+      <Input label="Message" name="message" required rows={6} />
 
       <div id="photo-reference-container"></div>
 
       <div class="flex items-center justify-between pt-4">
-        <Button type="submit" id="submit-btn" variant="primary" size="lg"> Send Message </Button>
+        <Button type="submit" id="submit-button" variant="primary" size="lg"> Send message </Button>
       </div>
     </form>
 
@@ -53,7 +52,7 @@ const photos = await getCollection('photos')
   }}
 >
   const RECAPTCHA_SITE_KEY = '6LeYEMwrAAAAAIejgqpzaCV4lO1JTAIE3MuHQyZL'
-  const CONTACT_FUNCTION_URL = 'http://localhost:8080/api/contact'
+  const API_URL = 'https://jon-good-photo.appspot.com/api/contact'
 
   // Initialize form
   document.addEventListener('DOMContentLoaded', () => {
@@ -63,7 +62,7 @@ const photos = await getCollection('photos')
 
     const header = document.getElementById('header')
     const form = document.getElementById('contact-form')
-    const submitBtn = document.getElementById('submit-btn')
+    const submitButton = document.getElementById('submit-button')
     const messageDiv = document.getElementById('form-message')
     const photoContainer = document.getElementById('photo-reference-container')
 
@@ -96,9 +95,9 @@ const photos = await getCollection('photos')
         `
 
           // Add remove functionality
-          const removeBtn = document.getElementById('remove-photo')
-          if (removeBtn) {
-            removeBtn.addEventListener('click', () => {
+          const removeButton = document.getElementById('remove-photo')
+          if (removeButton) {
+            removeButton.addEventListener('click', () => {
               const url = new URL(window.location.href)
               url.searchParams.delete('photo')
               window.location.href = url.toString()
@@ -124,11 +123,11 @@ const photos = await getCollection('photos')
       e.preventDefault()
       hideMessage()
 
-      submitBtn.disabled = true
-      submitBtn.textContent = 'Sending...'
+      submitButton.disabled = true
+      submitButton.textContent = 'Sending...'
 
-      try {
-        grecaptcha.enterprise.ready(async () => {
+      grecaptcha.enterprise.ready(async () => {
+        try {
           // Get reCAPTCHA token
           const token = await grecaptcha.enterprise.execute(RECAPTCHA_SITE_KEY, { action: 'CONTACT_FORM_SUBMIT' })
           // Prepare form data
@@ -147,7 +146,7 @@ const photos = await getCollection('photos')
           }
 
           // Submit to HTTPS function
-          const response = await fetch(CONTACT_FUNCTION_URL, {
+          const response = await fetch(API_URL, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -163,24 +162,15 @@ const photos = await getCollection('photos')
 
           showMessage('Thank you! Your message has been sent successfully.', 'success')
           form.reset()
-        })
-      } catch (error) {
-        console.error('Error sending message:', error)
-
-        let errorMessage = 'Sorry, there was an error sending your message. Please try again.'
-        if (error.message.includes('400')) {
-          errorMessage = 'Please check that all fields are filled out correctly.'
-        } else if (error.message.includes('403')) {
-          errorMessage = 'Security verification failed. Please try again.'
+        } catch (error) {
+          console.error('Error sending message:', error)
+          showMessage(errorMessage, 'error')
+        } finally {
+          submitButton.disabled = false
+          submitButton.textContent = 'Send message'
         }
-
-        showMessage(errorMessage, 'error')
-      } finally {
-        submitBtn.disabled = false
-        submitBtn.textContent = 'Send Message'
-      }
+      })
     }
-
     form.addEventListener('submit', handleSubmit)
   })
 </script>

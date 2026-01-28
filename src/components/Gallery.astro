@@ -11,7 +11,7 @@ const images = await getCollection('photos')
 <section id="gallery" class="lg:flex h-screen gap-6 snap-start snap-always">
   <div
     id="gallery-container"
-    class="w-full max-w-[370px] pb-10 pt-[120px] overflow-y-scroll scroll-smooth px-5 lg:px-10 h-full flex flex-col gap-8 snap-mandatory snap-y scrollbar-hide"
+    class="w-full max-w-[370px] pb-10 pt-[120px] mx-auto md:mx-0 overflow-y-scroll scroll-smooth px-5 lg:px-10 h-full flex flex-col gap-8 snap-mandatory snap-y scrollbar-hide"
   >
     <div class="gallery-image max-w-[320px] snap-center snap-always">
       <Image src={gradient} alt="gradient" width={320} height={320} loading="eager" />
@@ -55,7 +55,7 @@ const images = await getCollection('photos')
       images.map(({ data }) => (
         <div
           id={`image-${data.id}`}
-          class="transition-opacity duration-700 opacity-0 absolute top-20 lg:top-[120px] left-0 right-0 bottom-10 px-6 pb-20"
+          class="transition-opacity duration-700 hidden absolute top-20 lg:top-[120px] left-0 right-0 bottom-10 px-6 pb-20"
         >
           <div class="w-full">
             <Image
@@ -88,7 +88,7 @@ const images = await getCollection('photos')
       ))
     }
     <button id="close-image-drawer-button" title="Close image" class="lg:hidden absolute top-2 right-2">
-      <Image src={CloseIcon} alt="Close" width={24} height={24} loading="lazy" />
+      <Image src={CloseIcon} alt="Close" width={36} height={36} loading="lazy" />
     </button>
   </div>
 </section>
@@ -99,7 +99,6 @@ const images = await getCollection('photos')
   const imageDrawer = document.getElementById('image-drawer')
   const imageDrawerContainer = document.getElementById('image-drawer-container')
   const closeImageDrawerButton = document.getElementById('close-image-drawer-button')
-
   const handleClickOutsideDrawer = (e: MouseEvent | TouchEvent) => {
     let isImageClick = false
     images.forEach((image) => {
@@ -119,6 +118,22 @@ const images = await getCollection('photos')
     imageDrawerContainer?.classList.remove('active')
   }
 
+  // Swipe down to close drawer
+  let touchStartY = 0
+  const handleTouchStart = (e: TouchEvent) => {
+    touchStartY = e.touches[0].clientY
+  }
+
+  const handleTouchEnd = (e: TouchEvent) => {
+    const touchEndY = e.changedTouches[0].clientY
+    const swipeDistance = touchEndY - touchStartY
+    const swipeThreshold = 100
+
+    if (swipeDistance > swipeThreshold && imageDrawer?.classList.contains('active')) {
+      handleClickCloseDrawer()
+    }
+  }
+
   const handleClickOpenDrawer = (e: MouseEvent | TouchEvent) => {
     if (!(e.currentTarget as HTMLButtonElement).classList.contains('active')) {
       return
@@ -132,6 +147,8 @@ const images = await getCollection('photos')
     window.addEventListener('click', handleClickOutsideDrawer)
     window.addEventListener('touchend', handleClickOutsideDrawer)
     closeImageDrawerButton?.addEventListener('click', handleClickCloseDrawer)
+    imageDrawer?.addEventListener('touchstart', handleTouchStart)
+    imageDrawer?.addEventListener('touchend', handleTouchEnd)
     images.forEach((image) => {
       if (image.id) {
         image.addEventListener('click', handleClickOpenDrawer)
@@ -143,6 +160,8 @@ const images = await getCollection('photos')
     window.removeEventListener('click', handleClickOutsideDrawer)
     window.removeEventListener('touchend', handleClickOutsideDrawer)
     closeImageDrawerButton?.removeEventListener('click', handleClickCloseDrawer)
+    imageDrawer?.removeEventListener('touchstart', handleTouchStart)
+    imageDrawer?.removeEventListener('touchend', handleTouchEnd)
     images.forEach((image) => {
       if (image.id) {
         image.removeEventListener('click', handleClickOpenDrawer)
@@ -165,7 +184,7 @@ const images = await getCollection('photos')
 
   // Header and footer visibility logic
   const header = document.getElementById('header')
-  const main = document.getElementsByTagName('main')[0]
+  const main = document.querySelector('main')
   const footer = document.getElementsByTagName('footer')[0]
   const gallerySection = document.getElementById('gallery')
 
@@ -193,14 +212,14 @@ const images = await getCollection('photos')
       const threshold = 200
       if (imageCenter > windowCenter - threshold && imageCenter < windowCenter + threshold) {
         image.classList.add('active')
-        fullSizeImage?.classList.remove('opacity-0')
-        fullSizeImage?.classList.add('opacity-100')
+        fullSizeImage?.classList.remove('hidden')
+        fullSizeImage?.classList.add('block')
         formatDiv?.classList.remove('opacity-0')
         formatDiv?.classList.add('opacity-100')
       } else {
         image.classList.remove('active')
-        fullSizeImage?.classList.remove('opacity-100')
-        fullSizeImage?.classList.add('opacity-0')
+        fullSizeImage?.classList.remove('block')
+        fullSizeImage?.classList.add('hidden')
         formatDiv?.classList.remove('opacity-100')
         formatDiv?.classList.add('opacity-0')
       }
@@ -218,12 +237,14 @@ const images = await getCollection('photos')
     transform: translateY(-100%);
     z-index: 1200;
     transition: transform 0.3s ease-in-out;
+    overscroll-behavior: none;
   }
 
   #image-drawer-container {
     z-index: -1;
     opacity: 0;
     transition: opacity 0.2s ease-in-out;
+    overscroll-behavior: none;
   }
 
   #image-drawer-container.active {

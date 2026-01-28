@@ -7,9 +7,9 @@ import { verifyRecaptcha } from './recaptcha'
 const app = new Hono()
 const resend = new Resend(process.env.RESEND_API_KEY)
 
-// CORS middleware
+// CORS middleware - applied globally
 app.use(
-  '/api/*',
+  '*',
   cors({
     origin: ['https://jongood.photo', 'http://localhost:4321'],
     allowMethods: ['GET', 'POST', 'OPTIONS'],
@@ -26,7 +26,7 @@ app.get('/', (context) => {
 app.post('/api/contact', async (context) => {
   try {
     const body = await context.req.json()
-    const { name, email, message, photoTitle, photoId, recaptchaToken } = body
+    const { name, email, message, subject, photoTitle, photoId, recaptchaToken } = body
 
     if (!recaptchaToken) {
       return context.json({ error: 'Missing reCAPTCHA token' }, 400)
@@ -57,6 +57,7 @@ app.post('/api/contact', async (context) => {
         <h2>New Contact Form Submission</h2>
         <p><strong>Name:</strong> ${name}</p>
         <p><strong>Email:</strong> ${email}</p>
+        <p><strong>Subject:</strong> ${subject}</p>
         <p><strong>Message:</strong></p>
         <p>${message.replace(/\n/g, '<br>')}</p>
         <p><strong>Photo Title:</strong> ${photoTitle}</p>
