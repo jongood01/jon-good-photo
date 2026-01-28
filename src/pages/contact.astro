@@ -53,12 +53,12 @@ const photos = await getCollection('photos')
   }}
 >
   const RECAPTCHA_SITE_KEY = '6LeYEMwrAAAAAIejgqpzaCV4lO1JTAIE3MuHQyZL'
-  const CONTACT_FUNCTION_URL = 'https://submitcontactform-jx2ifnu4jq-uc.a.run.app'
+  const CONTACT_FUNCTION_URL = 'http://localhost:8080/api/contact'
 
   // Initialize form
   document.addEventListener('DOMContentLoaded', () => {
     const script = document.createElement('script')
-    script.src = `https://www.google.com/recaptcha/api.js?render=${RECAPTCHA_SITE_KEY}`
+    script.src = `https://www.google.com/recaptcha/enterprise.js?render=${RECAPTCHA_SITE_KEY}`
     document.head.appendChild(script)
 
     const header = document.getElementById('header')
@@ -128,40 +128,42 @@ const photos = await getCollection('photos')
       submitBtn.textContent = 'Sending...'
 
       try {
-        // Get reCAPTCHA token
-        const token = await window.grecaptcha.execute(RECAPTCHA_SITE_KEY, { action: 'contact_form' })
+        grecaptcha.enterprise.ready(async () => {
+          // Get reCAPTCHA token
+          const token = await grecaptcha.enterprise.execute(RECAPTCHA_SITE_KEY, { action: 'CONTACT_FORM_SUBMIT' })
+          // Prepare form data
+          const formData = new FormData(form)
+          const photoId = formData.get('photo-id')
+          const photoTitle = formData.get('photo-title')
 
-        // Prepare form data
-        const formData = new FormData(form)
-        const photoId = formData.get('photo-id')
-        const photoTitle = formData.get('photo-title')
+          const requestBody = {
+            name: formData.get('name'),
+            email: formData.get('email'),
+            subject: formData.get('subject'),
+            message: formData.get('message'),
+            photoTitle: photoTitle || null,
+            photoId: photoId || null,
+            recaptchaToken: token,
+          }
 
-        const requestBody = {
-          name: formData.get('name'),
-          email: formData.get('email'),
-          subject: formData.get('subject'),
-          message: formData.get('message'),
-          recaptchaToken: token,
-          ...(photoId && photoTitle && { photo: { id: photoId, title: photoTitle } }),
-        }
+          // Submit to HTTPS function
+          const response = await fetch(CONTACT_FUNCTION_URL, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(requestBody),
+          })
 
-        // Submit to HTTPS function
-        const response = await fetch(CONTACT_FUNCTION_URL, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(requestBody),
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`)
+          }
+
+          const result = await response.json()
+
+          showMessage('Thank you! Your message has been sent successfully.', 'success')
+          form.reset()
         })
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`)
-        }
-
-        const result = await response.json()
-
-        showMessage('Thank you! Your message has been sent successfully.', 'success')
-        form.reset()
       } catch (error) {
         console.error('Error sending message:', error)
 
