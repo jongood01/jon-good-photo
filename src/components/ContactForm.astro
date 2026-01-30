@@ -1,0 +1,144 @@
+---
+import Input from './Input.astro'
+import Button from './Button.astro'
+
+export interface PhotoData {
+  id: string
+  title: string
+  description: string
+  altText: string
+  thumbnail: string
+}
+
+export interface Props {
+  photos?: PhotoData[]
+}
+
+const { photos = [] } = Astro.props
+---
+
+<form id="contact-form" class="space-y-6">
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <Input type="text" label="Name" name="name" required />
+    <Input type="email" label="Email" name="email" required />
+  </div>
+
+  <Input type="text" label="Subject" name="subject" />
+
+  <Input label="Message" name="message" required rows={6} />
+
+  <div id="photo-reference-container"></div>
+
+  <div class="flex items-center justify-between pt-4">
+    <Button type="submit" id="submit-button" variant="primary" size="lg">
+      Send message
+    </Button>
+  </div>
+</form>
+
+<div id="form-message" class="mt-6 hidden"></div>
+
+<script define:vars={{ photosData: photos }}>
+  class ContactForm {
+    constructor() {
+      this.form = document.getElementById('contact-form')
+      this.submitButton = document.getElementById('submit-button')
+      this.messageDiv = document.getElementById('form-message')
+      this.photoContainer = document.getElementById('photo-reference-container')
+
+      this.init()
+    }
+
+    init() {
+      this.displayPhotoReference()
+      this.form.addEventListener('submit', (e) => this.handleSubmit(e))
+    }
+
+    displayPhotoReference() {
+      const urlParams = new URLSearchParams(window.location.search)
+      const photoId = urlParams.get('photo')
+
+      if (photoId && photosData) {
+        const photo = photosData.find((p) => p.id === photoId)
+        if (photo) {
+          this.photoContainer.innerHTML = `
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Photo Reference</label>
+              <div class="flex items-center gap-4 p-4 bg-gray-50 border">
+                <img src="${photo.thumbnail}" alt="${photo.altText}" class="w-16 h-16 object-cover" />
+                <div class="flex-1">
+                  <h3 class="font-medium text-gray-900">${photo.title}</h3>
+                  <p class="text-sm text-gray-600">${photo.description}</p>
+                </div>
+                <button type="button" id="remove-photo" class="text-gray-400 hover:text-gray-600 transition-colors" title="Remove photo reference">
+                  <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                  </svg>
+                </button>
+              </div>
+              <input type="hidden" name="photo-id" value="${photo.id}" />
+              <input type="hidden" name="photo-title" value="${photo.title}" />
+            </div>
+          `
+
+          const removeButton = document.getElementById('remove-photo')
+          if (removeButton) {
+            removeButton.addEventListener('click', () => {
+              const url = new URL(window.location.href)
+              url.searchParams.delete('photo')
+              window.location.href = url.toString()
+            })
+          }
+        }
+      }
+    }
+
+    showMessage(text, type) {
+      this.messageDiv.className = `mt-6 p-4 rounded-lg ${type === 'success' ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-red-50 text-red-800 border border-red-200'}`
+      this.messageDiv.textContent = text
+      this.messageDiv.classList.remove('hidden')
+    }
+
+    hideMessage() {
+      this.messageDiv.classList.add('hidden')
+    }
+
+    setSubmitting(isSubmitting) {
+      this.submitButton.disabled = isSubmitting
+      this.submitButton.textContent = isSubmitting ? 'Sending...' : 'Send message'
+    }
+
+    getFormData() {
+      const formData = new FormData(this.form)
+      return {
+        name: formData.get('name'),
+        email: formData.get('email'),
+        subject: formData.get('subject'),
+        message: formData.get('message'),
+        photoId: formData.get('photo-id') || null,
+        photoTitle: formData.get('photo-title') || null,
+      }
+    }
+
+    reset() {
+      this.form.reset()
+    }
+
+    handleSubmit(e) {
+      e.preventDefault()
+      this.hideMessage()
+
+      const formData = this.getFormData()
+      const event = new CustomEvent('contact-form-submit', {
+        detail: formData,
+        bubbles: true,
+      })
+      this.form.dispatchEvent(event)
+    }
+  }
+
+  // Initialize form and expose it globally for the page to interact with
+  document.addEventListener('DOMContentLoaded', () => {
+    window.contactForm = new ContactForm()
+  })
+</script>

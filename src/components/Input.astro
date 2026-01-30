@@ -10,17 +10,7 @@ export interface Props {
   class?: string
 }
 
-const {
-  type = 'text',
-  label,
-  name,
-  id = name,
-  placeholder,
-  required = false,
-  rows,
-  class: className = '',
-  ...rest
-} = Astro.props
+const { type = 'text', label, name, id = name, placeholder, required = false, rows, class: className = '', ...rest } = Astro.props
 ---
 
 <div class={className}>
@@ -28,25 +18,27 @@ const {
     {label}
     {required && <span class="text-red-500">*</span>}
   </label>
-  {rows ? (
-    <textarea
-      id={id}
-      name={name}
-      required={required}
-      rows={rows}
-      placeholder={placeholder}
-      class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors resize-vertical"
-      {...rest}
-    ></textarea>
-  ) : (
-    <input
-      type={type}
-      id={id}
-      name={name}
-      required={required}
-      placeholder={placeholder}
-      class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-      {...rest}
-    />
-  )}
+  {
+    rows ? (
+      <textarea
+        id={id}
+        name={name}
+        required={required}
+        rows={rows}
+        placeholder={placeholder}
+        class="w-full px-4 py-3 border border-black focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors resize-vertical"
+        {...rest}
+      />
+    ) : (
+      <input
+        type={type}
+        id={id}
+        name={name}
+        required={required}
+        placeholder={placeholder}
+        class="w-full px-4 py-3 border border-black focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+        {...rest}
+      />
+    )
+  }
 </div>
