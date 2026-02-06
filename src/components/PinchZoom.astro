@@ -1,0 +1,264 @@
+---
+// PinchZoom component - adds pinch-to-zoom and double-tap zoom functionality
+// This component should be included once on pages that need pinch zoom
+---
+
+<script>
+  class PinchZoomController {
+    private currentScale = 1
+    private startDistance = 0
+    private startScale = 1
+    private translateX = 0
+    private translateY = 0
+    private startX = 0
+    private startY = 0
+    private isPinching = false
+    private isDragging = false
+    private activeImage: HTMLImageElement | null = null
+
+    // Double tap state
+    private lastTapTime = 0
+    private lastTapX = 0
+    private lastTapY = 0
+    private readonly DOUBLE_TAP_DELAY = 300
+
+    private getDistance(touches: TouchList): number {
+      const dx = touches[0].clientX - touches[1].clientX
+      const dy = touches[0].clientY - touches[1].clientY
+      return Math.sqrt(dx * dx + dy * dy)
+    }
+
+    private getMidpoint(touches: TouchList): { x: number; y: number } {
+      return {
+        x: (touches[0].clientX + touches[1].clientX) / 2,
+        y: (touches[0].clientY + touches[1].clientY) / 2,
+      }
+    }
+
+    private updateTransform(img: HTMLImageElement): void {
+      img.style.transform = `translate(${this.translateX}px, ${this.translateY}px) scale(${this.currentScale})`
+    }
+
+    private constrainPan(img: HTMLImageElement): void {
+      // Get the transform origin percentages
+      const originStyle = img.style.transformOrigin || '50% 50%'
+      const originParts = originStyle.split(' ')
+      const originX = parseFloat(originParts[0]) / 100
+      const originY = parseFloat(originParts[1] || originParts[0]) / 100
+
+      const imgWidth = img.offsetWidth
+      const imgHeight = img.offsetHeight
+      const scale = this.currentScale
+
+      // Calculate how much the image extends beyond original bounds due to scaling
+      // Based on transform origin position
+      const extraLeft = imgWidth * (scale - 1) * originX
+      const extraRight = imgWidth * (scale - 1) * (1 - originX)
+      const extraTop = imgHeight * (scale - 1) * originY
+      const extraBottom = imgHeight * (scale - 1) * (1 - originY)
+
+      // Constrain translation so edges don't go past original positions
+      // Max translateX: left edge can't go right past origin (positive direction limited)
+      // Min translateX: right edge can't go left past original right (negative direction limited)
+      const maxTranslateX = extraLeft
+      const minTranslateX = -extraRight
+      const maxTranslateY = extraTop
+      const minTranslateY = -extraBottom
+
+      this.translateX = Math.min(maxTranslateX, Math.max(minTranslateX, this.translateX))
+      this.translateY = Math.min(maxTranslateY, Math.max(minTranslateY, this.translateY))
+    }
+
+    public resetZoom(): void {
+      this.currentScale = 1
+      this.translateX = 0
+      this.translateY = 0
+      if (this.activeImage) {
+        this.activeImage.style.transform = ''
+        this.activeImage.style.transformOrigin = ''
+      }
+    }
+
+    public setActiveImage(img: HTMLImageElement): void {
+      this.activeImage = img
+      // Set the pinch-zoom-wrapper height to the height of the active image
+      const wrapper = this.activeImage?.closest('.pinch-zoom-wrapper') as HTMLDivElement
+      if (wrapper) {
+        wrapper.style.height = `${this.activeImage?.height}px`
+      }
+    }
+
+    public resetAllImageTransforms(): void {
+      const allImages = document.querySelectorAll<HTMLImageElement>('.pinch-zoom-image')
+      allImages.forEach((img) => {
+        img.style.transform = ''
+        img.style.transformOrigin = ''
+      })
+      this.currentScale = 1
+      this.translateX = 0
+      this.translateY = 0
+      this.activeImage = null
+    }
+
+    public get scale(): number {
+      return this.currentScale
+    }
+
+    private handlePinchStart = (e: TouchEvent): void => {
+      if (window.innerWidth >= 1024) return
+
+      const target = e.target as HTMLElement
+      const wrapper = target.closest('.pinch-zoom-wrapper')
+      const img = wrapper?.querySelector('img') as HTMLImageElement
+      if (!img) return
+
+      if (e.touches.length === 2) {
+        e.preventDefault()
+        this.isPinching = true
+        this.isDragging = false
+        this.activeImage = img
+        this.startDistance = this.getDistance(e.touches)
+        this.startScale = this.currentScale
+
+        const midpoint = this.getMidpoint(e.touches)
+        const rect = img.getBoundingClientRect()
+        const originX = ((midpoint.x - rect.left) / rect.width) * 100
+        const originY = ((midpoint.y - rect.top) / rect.height) * 100
+        img.style.transformOrigin = `${originX}% ${originY}%`
+      } else if (e.touches.length === 1 && this.currentScale > 1) {
+        this.isDragging = true
+        this.isPinching = false
+        this.activeImage = img
+        this.startX = e.touches[0].clientX - this.translateX
+        this.startY = e.touches[0].clientY - this.translateY
+      }
+    }
+
+    private handlePinchMove = (e: TouchEvent): void => {
+      if (window.innerWidth >= 1024) return
+
+      if (!this.activeImage) return
+      if (this.isPinching && e.touches.length === 2) {
+        e.preventDefault()
+        const currentDistance = this.getDistance(e.touches)
+        const scale = (currentDistance / this.startDistance) * this.startScale
+        this.currentScale = Math.min(Math.max(scale, 1), 4)
+        this.updateTransform(this.activeImage)
+      } else if (this.isDragging && e.touches.length === 1 && this.currentScale > 1) {
+        e.preventDefault()
+        this.translateX = e.touches[0].clientX - this.startX
+        this.translateY = e.touches[0].clientY - this.startY
+        this.constrainPan(this.activeImage)
+        this.updateTransform(this.activeImage)
+      }
+    }
+
+    private handlePinchEnd = (e: TouchEvent): void => {
+      if (window.innerWidth >= 1024) return
+
+      this.isPinching = false
+      if (e.touches.length === 0) {
+        this.isDragging = false
+        if (this.currentScale <= 1) {
+          this.resetZoom()
+        }
+      }
+    }
+
+    private handleDoubleTap = (e: TouchEvent): void => {
+      if (window.innerWidth >= 1024) return
+
+      const target = e.target as HTMLElement
+      const wrapper = target.closest('.pinch-zoom-wrapper')
+      const img = wrapper?.querySelector('img') as HTMLImageElement
+      if (!img) return
+
+      const now = Date.now()
+      const touch = e.changedTouches[0]
+      const tapX = touch.clientX
+      const tapY = touch.clientY
+
+      const timeDiff = now - this.lastTapTime
+      const distX = Math.abs(tapX - this.lastTapX)
+      const distY = Math.abs(tapY - this.lastTapY)
+
+      if (timeDiff < this.DOUBLE_TAP_DELAY && distX < 30 && distY < 30) {
+        e.preventDefault()
+        this.activeImage = img
+
+        if (this.currentScale > 1) {
+          // Zoom out
+          this.currentScale = 1
+          this.translateX = 0
+          this.translateY = 0
+          img.style.transform = ''
+          img.style.transformOrigin = ''
+        } else {
+          // Zoom in to 3x at tap location
+          this.currentScale = 3
+          const rect = img.getBoundingClientRect()
+          const originX = ((tapX - rect.left) / rect.width) * 100
+          const originY = ((tapY - rect.top) / rect.height) * 100
+          img.style.transformOrigin = `${originX}% ${originY}%`
+          this.updateTransform(img)
+        }
+
+        this.lastTapTime = 0
+      } else {
+        this.lastTapTime = now
+        this.lastTapX = tapX
+        this.lastTapY = tapY
+      }
+    }
+
+    private handleTouchStart = (e: TouchEvent): void => {
+      this.handlePinchStart(e)
+    }
+
+    private handleTouchMove = (e: TouchEvent): void => {
+      this.handlePinchMove(e)
+    }
+
+    private handleTouchEnd = (e: TouchEvent): void => {
+      this.handlePinchEnd(e)
+      this.handleDoubleTap(e)
+    }
+
+    public init(): void {
+      const pinchZoomWrappers = document.querySelectorAll<HTMLElement>('.pinch-zoom-wrapper')
+      pinchZoomWrappers.forEach((wrapper) => {
+        wrapper.addEventListener('touchstart', this.handleTouchStart, { passive: false })
+        wrapper.addEventListener('touchmove', this.handleTouchMove, { passive: false })
+        wrapper.addEventListener('touchend', this.handleTouchEnd)
+      })
+    }
+  }
+
+  // Create global instance
+  const pinchZoom = new PinchZoomController()
+  pinchZoom.init()
+
+  // Expose to window for other components to use
+  ;(window as any).pinchZoom = pinchZoom
+</script>
+
+<style is:global>
+  .pinch-zoom-wrapper {
+    overflow: hidden;
+  }
+
+  .pinch-zoom-wrapper img {
+    will-change: transform;
+    transition: transform 0.1s ease-out;
+  }
+
+  .pinch-zoom-enabled .pinch-zoom-wrapper {
+    touch-action: none;
+  }
+
+  @media (min-width: 1024px) {
+    .pinch-zoom-enabled .pinch-zoom-wrapper {
+      touch-action: auto;
+    }
+  }
+</style>

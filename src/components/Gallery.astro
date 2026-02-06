@@ -1,10 +1,11 @@
 ---
 import { Image } from 'astro:assets'
 import { getCollection } from 'astro:content'
-import Button from './Button.astro'
 import gradient from '../assets/gradient.svg'
-import CloseIcon from '../assets/close-icon.svg'
 import ArrowDownIcon from '../assets/arrow-down-icon.svg'
+import ImageDrawer from './ImageDrawer.astro'
+import PinchZoom from './PinchZoom.astro'
+
 const images = await getCollection('photos')
 ---
 
@@ -50,137 +51,35 @@ const images = await getCollection('photos')
       <Image src={gradient} alt="gradient" width={320} height={320} loading="lazy" />
     </div>
   </div>
-  <div id="image-drawer" class="relative bg-white z-[100] h-full w-full overflow-y-scroll overflow-x-hidden scroll-smooth scrollbar-hide">
-    {
-      images.map(({ data }) => (
-        <div
-          id={`image-${data.id}`}
-          class="transition-opacity duration-700 hidden absolute top-20 lg:top-[120px] left-0 right-0 bottom-10 px-6 pb-20"
-        >
-          <div class="w-full">
-            <Image
-              src={data.file}
-              alt={data.aspectRatio}
-              widths={
-                data.aspectRatio === '1:1'
-                  ? [650, 1300]
-                  : data.aspectRatio === '3:2'
-                    ? [975, 1950]
-                    : data.aspectRatio === '16:9'
-                      ? [1156, 2312]
-                      : [650, 1300]
-              }
-              height={650}
-              sizes="(width <= 500px) 200px, (width <= 768px) 650px"
-              quality={'high'}
-              style={{ maxHeight: 'calc(100vh - 250px)' }}
-              class="w-full h-auto object-contain object-left-top"
-              oncontextmenu="return false"
-            />
 
-            <div class="pb-10">
-              <h2 class="mt-4">{data.title}</h2>
-              <p class="text-black/40 pb-4">{data.description}</p>
-              <Button href={`/contact?photo=${data.id}`}>Enquire</Button>
-            </div>
-          </div>
-        </div>
-      ))
-    }
-    <button id="close-image-drawer-button" title="Close image" class="lg:hidden absolute top-2 right-2">
-      <Image src={CloseIcon} alt="Close" width={36} height={36} loading="lazy" />
-    </button>
-  </div>
+  <ImageDrawer />
 </section>
-<div id="image-drawer-container" class="fixed top-0 left-0 bottom-0 right-0 bg-white/60"></div>
+
+<PinchZoom />
+
 <script>
-  const images = document.querySelectorAll<HTMLButtonElement>('.gallery-image')
+  const thumbnails = document.querySelectorAll<HTMLButtonElement>('.gallery-image')
   const gallery = document.getElementById('gallery-container')
-  const imageDrawer = document.getElementById('image-drawer')
-  const imageDrawerContainer = document.getElementById('image-drawer-container')
-  const closeImageDrawerButton = document.getElementById('close-image-drawer-button')
-  const handleClickOutsideDrawer = (e: MouseEvent | TouchEvent) => {
-    let isImageClick = false
-    images.forEach((image) => {
-      if (image.contains(e.target as Node)) {
-        isImageClick = true
-      }
-    })
 
-    if (!imageDrawer?.contains(e.target as Node) && !isImageClick) {
-      imageDrawer?.classList.remove('active')
-      imageDrawerContainer?.classList.remove('active')
-    }
-  }
+  // Get drawer controller from window
+  const getDrawer = () => (window as any).imageDrawer
 
-  const handleClickCloseDrawer = () => {
-    imageDrawer?.classList.remove('active')
-    imageDrawerContainer?.classList.remove('active')
-  }
-
-  // Swipe down to close drawer
-  let touchStartY = 0
-  const handleTouchStart = (e: TouchEvent) => {
-    touchStartY = e.touches[0].clientY
-  }
-
-  const handleTouchEnd = (e: TouchEvent) => {
-    const touchEndY = e.changedTouches[0].clientY
-    const swipeDistance = touchEndY - touchStartY
-    const swipeThreshold = 100
-
-    if (swipeDistance > swipeThreshold && imageDrawer?.classList.contains('active')) {
-      handleClickCloseDrawer()
-    }
-  }
-
-  const handleClickOpenDrawer = (e: MouseEvent | TouchEvent) => {
-    if (!(e.currentTarget as HTMLButtonElement).classList.contains('active')) {
+  const handleClickOpenImage = (e: MouseEvent | TouchEvent) => {
+    const target = e.currentTarget as HTMLButtonElement
+    if (!target.classList.contains('active')) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'center' })
       return
     }
-
-    imageDrawer?.classList.add('active')
-    imageDrawerContainer?.classList.add('active')
+    if (target?.classList.contains('active') && window.innerWidth < 1024) {
+      getDrawer()?.open()
+    }
   }
 
-  const addListeners = () => {
-    window.addEventListener('click', handleClickOutsideDrawer)
-    window.addEventListener('touchend', handleClickOutsideDrawer)
-    closeImageDrawerButton?.addEventListener('click', handleClickCloseDrawer)
-    imageDrawer?.addEventListener('touchstart', handleTouchStart)
-    imageDrawer?.addEventListener('touchend', handleTouchEnd)
-    images.forEach((image) => {
-      if (image.id) {
-        image.addEventListener('click', handleClickOpenDrawer)
-      }
-    })
-  }
-
-  const removeListeners = () => {
-    window.removeEventListener('click', handleClickOutsideDrawer)
-    window.removeEventListener('touchend', handleClickOutsideDrawer)
-    closeImageDrawerButton?.removeEventListener('click', handleClickCloseDrawer)
-    imageDrawer?.removeEventListener('touchstart', handleTouchStart)
-    imageDrawer?.removeEventListener('touchend', handleTouchEnd)
-    images.forEach((image) => {
-      if (image.id) {
-        image.removeEventListener('click', handleClickOpenDrawer)
-      }
-    })
-  }
-
-  window.addEventListener('resize', () => {
-    removeListeners()
-
-    if (window.innerWidth < 1024) {
-      addListeners()
+  thumbnails.forEach((image) => {
+    if (image.id) {
+      image.addEventListener('click', handleClickOpenImage)
     }
   })
-
-  // Only add listeners for less than lg
-  if (window.innerWidth < 1024) {
-    addListeners()
-  }
 
   // Header and footer visibility logic
   const header = document.getElementById('header')
@@ -199,27 +98,32 @@ const images = await getCollection('photos')
     }
   })
 
+  // Gallery scroll - handles image switching
+  let currentActiveId: string | null = null
+
   gallery?.addEventListener('scroll', () => {
-    images.forEach((image) => {
+    thumbnails.forEach((image) => {
       const imageTop = image.getBoundingClientRect().top
       const imageBottom = image.getBoundingClientRect().bottom
-      const id = image.id.replace('thumbnail-', 'image-')
+      const imageId = image.id.replace('thumbnail-', '')
       const formatId = image.id.replace('thumbnail-', 'format-')
-      const fullSizeImage = document.getElementById(id)
       const formatDiv = document.getElementById(formatId)
       const windowCenter = window.innerHeight / 2
       const imageCenter = (imageTop + imageBottom) / 2
       const threshold = 200
+
       if (imageCenter > windowCenter - threshold && imageCenter < windowCenter + threshold) {
         image.classList.add('active')
-        fullSizeImage?.classList.remove('hidden')
-        fullSizeImage?.classList.add('block')
         formatDiv?.classList.remove('opacity-0')
         formatDiv?.classList.add('opacity-100')
+
+        // Update drawer image when active image changes
+        if (currentActiveId !== imageId && imageId) {
+          currentActiveId = imageId
+          getDrawer()?.setActiveImage(imageId)
+        }
       } else {
         image.classList.remove('active')
-        fullSizeImage?.classList.remove('block')
-        fullSizeImage?.classList.add('hidden')
         formatDiv?.classList.remove('opacity-100')
         formatDiv?.classList.add('opacity-0')
       }
@@ -228,33 +132,9 @@ const images = await getCollection('photos')
 </script>
 
 <style is:global>
-  #image-drawer {
-    transform: translateY(0);
-    transition: transform 0.3s ease-in-out;
-  }
-
-  #image-drawer.active {
-    transform: translateY(-100%);
-    z-index: 1200;
-    transition: transform 0.3s ease-in-out;
-    overscroll-behavior: none;
-  }
-
-  #image-drawer-container {
-    z-index: -1;
-    opacity: 0;
-    transition: opacity 0.2s ease-in-out;
-    overscroll-behavior: none;
-  }
-
-  #image-drawer-container.active {
-    z-index: 1000;
-    opacity: 1;
-    transition: opacity 0.2s ease-in-out;
-  }
-
   .gallery-image {
     position: relative;
+    cursor: pointer;
   }
 
   .gallery-image::after {
@@ -270,15 +150,5 @@ const images = await getCollection('photos')
 
   .gallery-image.active::after {
     background: rgba(0, 0, 0, 0);
-  }
-
-  @media (max-width: 1024px) {
-    .gallery-image.thumbnail {
-      cursor: default;
-    }
-
-    .gallery-image.thumbnail.active {
-      cursor: pointer;
-    }
   }
 </style>

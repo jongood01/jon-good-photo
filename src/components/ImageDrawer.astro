@@ -1,0 +1,203 @@
+---
+import { Image, getImage } from 'astro:assets'
+import { getCollection } from 'astro:content'
+import Button from './Button.astro'
+import CloseIcon from '../assets/close-icon.svg'
+
+const photos = await getCollection('photos')
+
+// Pre-process all images to get their optimized URLs
+const imageData = await Promise.all(
+  photos.map(async ({ data }) => {
+    const widths =
+      data.aspectRatio === '1:1' ? [650, 1300] : data.aspectRatio === '3:2' ? [975, 1950] : data.aspectRatio === '16:9' ? [1156, 2312] : [650, 1300]
+
+    const optimizedImage = await getImage({
+      src: data.file,
+      widths,
+      format: 'webp',
+      quality: 'high',
+    })
+
+    return {
+      id: data.id,
+      src: optimizedImage.src,
+      srcset: optimizedImage.srcSet.attribute,
+      alt: data.altText || data.aspectRatio,
+      title: data.title,
+      description: data.description,
+    }
+  })
+)
+---
+
+<div id="image-drawer" class="relative bg-black lg:bg-white z-[100] h-full w-full overflow-y-scroll overflow-x-hidden scroll-smooth scrollbar-hide">
+  <div id="drawer-image-container" class="absolute top-20 lg:top-[120px] left-0 right-0 bottom-10 lg:px-6 pb-20">
+    <div class="w-full pinch-zoom-wrapper">
+      <img
+        id="drawer-image"
+        src=""
+        srcset=""
+        alt=""
+        sizes="(width <= 500px) 200px, (width <= 768px) 650px"
+        style="max-height: calc(100vh - 250px)"
+        class="pinch-zoom-image w-full h-auto object-contain object-left-top"
+        oncontextmenu="return false"
+      />
+    </div>
+    <div class="pb-10 px-6 lg:px-0 text-white lg:text-black">
+      <h2 id="drawer-title" class="mt-4"></h2>
+      <p id="drawer-description" class="pb-4"></p>
+      <Button id="drawer-enquire-button" href="/contact">Enquire</Button>
+    </div>
+  </div>
+
+  <button id="close-image-drawer-button" title="Close image" class="lg:hidden absolute top-2 right-2">
+    <Image src={CloseIcon} alt="Close" width={36} height={36} loading="lazy" />
+  </button>
+</div>
+<div id="image-drawer-container" class="fixed top-0 left-0 bottom-0 right-0 bg-white/60"></div>
+
+<!-- Store image data for JS access -->
+<script is:inline id="image-data" type="application/json" set:html={JSON.stringify(imageData)} />
+
+<script>
+  const imageDrawer = document.getElementById('image-drawer')
+  const imageDrawerContainer = document.getElementById('image-drawer-container')
+  const closeImageDrawerButton = document.getElementById('close-image-drawer-button')
+  const drawerImage = document.getElementById('drawer-image') as HTMLImageElement
+  const drawerTitle = document.getElementById('drawer-title')
+  const drawerDescription = document.getElementById('drawer-description')
+  const drawerEnquireButton = document.getElementById('drawer-enquire-button') as HTMLAnchorElement
+
+  // Load image data from JSON
+  const imageDataScript = document.getElementById('image-data')
+  const imageData: Array<{
+    id: string
+    src: string
+    srcset: string
+    alt: string
+    title: string
+    description: string
+  }> = imageDataScript ? JSON.parse(imageDataScript.textContent || '[]') : []
+
+  // Get pinchZoom controller from window
+  const getPinchZoom = () => (window as any).pinchZoom
+
+  let touchStartY = 0
+  let touchStartX = 0
+
+  const setActiveImage = (imageId: string) => {
+    const data = imageData.find((img) => img.id === imageId)
+    if (!data) return
+
+    if (drawerImage) {
+      drawerImage.src = data.src
+      drawerImage.srcset = data.srcset
+      drawerImage.alt = data.alt
+    }
+    if (drawerTitle) drawerTitle.textContent = data.title
+    if (drawerDescription) drawerDescription.textContent = data.description
+    if (drawerEnquireButton) drawerEnquireButton.href = `/contact?photo=${data.id}`
+
+    // Reset zoom when changing images
+    getPinchZoom()?.resetZoom()
+  }
+
+  const openDrawer = () => {
+    imageDrawer?.classList.add('active')
+    imageDrawerContainer?.classList.add('active')
+    imageDrawer?.classList.add('pinch-zoom-enabled')
+    getPinchZoom()?.setActiveImage(drawerImage as HTMLImageElement)
+  }
+
+  const closeDrawer = () => {
+    imageDrawer?.classList.remove('active')
+    imageDrawerContainer?.classList.remove('active')
+    imageDrawer?.classList.remove('pinch-zoom-enabled')
+    getPinchZoom()?.resetZoom()
+    getPinchZoom()?.setActiveImage(null)
+  }
+
+  const handleClickOutside = (e: MouseEvent | TouchEvent) => {
+    const thumbnails = document.querySelectorAll('.gallery-image')
+    let isImageClick = false
+    thumbnails.forEach((image) => {
+      if (image.contains(e.target as Node)) {
+        isImageClick = true
+      }
+    })
+
+    if (!imageDrawer?.contains(e.target as Node) && !isImageClick) {
+      closeDrawer()
+    }
+  }
+
+  // Swipe to close
+  imageDrawer?.addEventListener(
+    'touchstart',
+    (e: TouchEvent) => {
+      if (e.touches.length === 1) {
+        touchStartY = e.touches[0].clientY
+        touchStartX = e.touches[0].clientX
+      }
+    },
+    { passive: true }
+  )
+
+  imageDrawer?.addEventListener('touchend', (e: TouchEvent) => {
+    const pinchZoom = getPinchZoom()
+    const currentScale = pinchZoom?.scale ?? 1
+
+    if (currentScale <= 1 && e.changedTouches.length === 1) {
+      const touchEndY = e.changedTouches[0].clientY
+      const touchEndX = e.changedTouches[0].clientX
+      const swipeDistanceY = touchEndY - touchStartY
+      const swipeDistanceX = Math.abs(touchEndX - touchStartX)
+      const swipeThreshold = 100
+
+      if (swipeDistanceY > swipeThreshold && swipeDistanceX < 50 && imageDrawer?.classList.contains('active')) {
+        closeDrawer()
+      }
+    }
+  })
+
+  closeImageDrawerButton?.addEventListener('click', closeDrawer)
+  window.addEventListener('click', handleClickOutside)
+  window.addEventListener('touchend', handleClickOutside)
+
+  // Expose functions for Gallery to use
+  ;(window as any).imageDrawer = {
+    open: openDrawer,
+    close: closeDrawer,
+    setActiveImage,
+    resetZoom: () => getPinchZoom()?.resetZoom(),
+  }
+</script>
+
+<style is:global>
+  #image-drawer {
+    transform: translateY(0);
+    transition: transform 0.3s ease-in-out;
+  }
+
+  #image-drawer.active {
+    transform: translateY(-100%);
+    z-index: 1200;
+    transition: transform 0.3s ease-in-out;
+    overscroll-behavior: none;
+  }
+
+  #image-drawer-container {
+    z-index: -1;
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out;
+    overscroll-behavior: none;
+  }
+
+  #image-drawer-container.active {
+    z-index: 1000;
+    opacity: 1;
+    transition: opacity 0.2s ease-in-out;
+  }
+</style>
