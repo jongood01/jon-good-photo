@@ -17,98 +17,100 @@ const photosData = photos.map((photo) => ({
 
 <Layout title="Contact - Jon Good Photography">
   <Header />
-  <div class="pt-[120px] max-w-2xl mx-auto px-6 pb-12">
-    <div class="mb-10">
-      <h1 class="text-xl my-4">Get in touch</h1>
+  <div class="h-full mx-8 bg-[url('/lined-paper.svg')] [background-size:10px_75px] bg-repeat">
+    <div class="pt-[120px] max-w-2xl mx-auto px-6 pb-12">
+      <div class="mb-10">
+        <h1 class="text-xl my-4">Get in touch</h1>
+      </div>
+
+      <ContactForm photos={photosData} />
     </div>
-
-    <ContactForm photos={photosData} />
+    <Footer />
   </div>
-  <Footer />
-</Layout>
 
-<script>
-  declare global {
-    interface Window {
-      contactForm: {
-        setSubmitting: (isSubmitting: boolean) => void
-        showMessage: (text: string, type: 'success' | 'error') => void
-        reset: () => void
+  <script>
+    declare global {
+      interface Window {
+        contactForm: {
+          setSubmitting: (isSubmitting: boolean) => void
+          showMessage: (text: string, type: 'success' | 'error') => void
+          reset: () => void
+        }
+      }
+      const grecaptcha: {
+        enterprise: {
+          ready: (callback: () => void) => void
+          execute: (siteKey: string, options: { action: string }) => Promise<string>
+        }
       }
     }
-    const grecaptcha: {
-      enterprise: {
-        ready: (callback: () => void) => void
-        execute: (siteKey: string, options: { action: string }) => Promise<string>
-      }
+
+    const RECAPTCHA_SITE_KEY = '6LeYEMwrAAAAAIejgqpzaCV4lO1JTAIE3MuHQyZL'
+    const API_URL = 'https://jon-good-photo.appspot.com/api/contact'
+
+    function loadRecaptcha() {
+      const script = document.createElement('script')
+      script.src = `https://www.google.com/recaptcha/enterprise.js?render=${RECAPTCHA_SITE_KEY}`
+      document.head.appendChild(script)
     }
-  }
 
-  const RECAPTCHA_SITE_KEY = '6LeYEMwrAAAAAIejgqpzaCV4lO1JTAIE3MuHQyZL'
-  const API_URL = 'https://jon-good-photo.appspot.com/api/contact'
+    async function getRecaptchaToken(): Promise<string> {
+      return new Promise((resolve, reject) => {
+        grecaptcha.enterprise.ready(async () => {
+          try {
+            const token = await grecaptcha.enterprise.execute(RECAPTCHA_SITE_KEY, {
+              action: 'CONTACT_FORM_SUBMIT',
+            })
+            resolve(token)
+          } catch (error) {
+            reject(error)
+          }
+        })
+      })
+    }
 
-  function loadRecaptcha() {
-    const script = document.createElement('script')
-    script.src = `https://www.google.com/recaptcha/enterprise.js?render=${RECAPTCHA_SITE_KEY}`
-    document.head.appendChild(script)
-  }
+    async function submitToApi(formData: Record<string, string | null>, recaptchaToken: string) {
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...formData,
+          recaptchaToken,
+        }),
+      })
 
-  async function getRecaptchaToken(): Promise<string> {
-    return new Promise((resolve, reject) => {
-      grecaptcha.enterprise.ready(async () => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      return response.json()
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadRecaptcha()
+
+      document.addEventListener('contact-form-submit', async (e: Event) => {
+        const customEvent = e as CustomEvent
+        const form = window.contactForm
+        if (!form) return
+
+        form.setSubmitting(true)
+
         try {
-          const token = await grecaptcha.enterprise.execute(RECAPTCHA_SITE_KEY, {
-            action: 'CONTACT_FORM_SUBMIT',
-          })
-          resolve(token)
+          const recaptchaToken = await getRecaptchaToken()
+          await submitToApi(customEvent.detail, recaptchaToken)
+
+          form.showMessage('Thank you! Your message has been sent successfully.', 'success')
+          form.reset()
         } catch (error) {
-          reject(error)
+          console.error('Error sending message:', error)
+          form.showMessage('Sorry, there was an error sending your message. Please try again.', 'error')
+        } finally {
+          form.setSubmitting(false)
         }
       })
     })
-  }
-
-  async function submitToApi(formData: Record<string, string | null>, recaptchaToken: string) {
-    const response = await fetch(API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        ...formData,
-        recaptchaToken,
-      }),
-    })
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-
-    return response.json()
-  }
-
-  document.addEventListener('DOMContentLoaded', () => {
-    loadRecaptcha()
-
-    document.addEventListener('contact-form-submit', async (e: Event) => {
-      const customEvent = e as CustomEvent
-      const form = window.contactForm
-      if (!form) return
-
-      form.setSubmitting(true)
-
-      try {
-        const recaptchaToken = await getRecaptchaToken()
-        await submitToApi(customEvent.detail, recaptchaToken)
-
-        form.showMessage('Thank you! Your message has been sent successfully.', 'success')
-        form.reset()
-      } catch (error) {
-        console.error('Error sending message:', error)
-        form.showMessage('Sorry, there was an error sending your message. Please try again.', 'error')
-      } finally {
-        form.setSubmitting(false)
-      }
-    })
-  })
-</script>
+  </script>
+</Layout>

@@ -17,7 +17,7 @@ export interface Props {
 const { photos = [] } = Astro.props
 ---
 
-<form id="contact-form" class="space-y-6">
+<form id="contact-form" class="space-y-6 bg-white p-8 shadow-sm">
   <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
     <Input type="text" label="Name" name="name" required />
     <Input type="email" label="Email" name="email" required />
@@ -30,9 +30,7 @@ const { photos = [] } = Astro.props
   <div id="photo-reference-container"></div>
 
   <div class="flex items-center justify-between pt-4">
-    <Button type="submit" id="submit-button" variant="primary" size="lg">
-      Send message
-    </Button>
+    <Button type="submit" id="submit-button" variant="primary" size="lg"> Send message </Button>
   </div>
 </form>
 

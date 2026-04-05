@@ -5,11 +5,17 @@ import gradient from '../assets/gradient.svg'
 import ArrowDownIcon from '../assets/arrow-down-icon.svg'
 import ImageDrawer from './ImageDrawer.astro'
 import PinchZoom from './PinchZoom.astro'
+import Header from './Header.astro'
+import Footer from './Footer.astro'
 
 const images = await getCollection('photos')
 ---
 
-<section id="gallery" class="lg:flex h-screen gap-6 snap-start snap-always">
+<section
+  id="gallery"
+  class="relative lg:flex h-screen gap-6 snap-start snap-always mx-4 lg:mx-8 bg-[url('/lined-paper.svg')] [background-size:10px_75px] bg-repeat"
+>
+  <Header />
   <div
     id="gallery-container"
     class="w-full max-w-[370px] pb-10 pt-[120px] mx-auto md:mx-0 overflow-y-scroll scroll-smooth px-5 lg:px-10 h-full flex flex-col gap-8 snap-mandatory snap-y scrollbar-hide"
@@ -53,6 +59,7 @@ const images = await getCollection('photos')
   </div>
 
   <ImageDrawer />
+  <Footer />
 </section>
 
 <PinchZoom />
@@ -78,23 +85,6 @@ const images = await getCollection('photos')
   thumbnails.forEach((image) => {
     if (image.id) {
       image.addEventListener('click', handleClickOpenImage)
-    }
-  })
-
-  // Header and footer visibility logic
-  const header = document.getElementById('header')
-  const main = document.querySelector('main')
-  const footer = document.getElementsByTagName('footer')[0]
-  const gallerySection = document.getElementById('gallery')
-
-  main?.addEventListener('scroll', () => {
-    if (!footer || !gallerySection || !main || !header) return
-    if (main.scrollTop >= gallerySection.offsetTop) {
-      footer.style.opacity = '1'
-      header.style.opacity = '1'
-    } else {
-      footer.style.opacity = '0'
-      header.style.opacity = '0'
     }
   })
 

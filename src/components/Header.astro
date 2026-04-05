@@ -3,13 +3,11 @@ import Nav from '../components/Nav.astro'
 import Logo from '../components/Logo.astro'
 import { Image } from 'astro:assets'
 import MenuIcon from '../assets/menu-icon.svg'
-
-const { isHidden = false } = Astro.props
 ---
 
 <header
   id="header"
-  class={`flex justify-between items-center px-6 lg:px-10 absolute top-0 left-0 right-0 h-[120px] z-[1000] bg-white transition-opacity duration-400 ease-in-out ${isHidden ? 'opacity-0' : 'opacity-100'}`}
+  class="flex justify-between items-center px-6 lg:px-10 bg-white lg:bg-transparent absolute top-0 left-0 right-0 h-[120px] z-[1000]"
 >
   <Logo />
   <button id="menu-button" title="Menu button" class="cursor-pointer color-pureblue lg:hidden">

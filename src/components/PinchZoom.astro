@@ -15,6 +15,7 @@
     private isPinching = false
     private isDragging = false
     private activeImage: HTMLImageElement | null = null
+    private maxScale = 3
 
     // Double tap state
     private lastTapTime = 0
@@ -117,6 +118,7 @@
         this.isPinching = true
         this.isDragging = false
         this.activeImage = img
+        img.classList.add('panning')
         this.startDistance = this.getDistance(e.touches)
         this.startScale = this.currentScale
 
@@ -129,6 +131,7 @@
         this.isDragging = true
         this.isPinching = false
         this.activeImage = img
+        img.classList.add('panning')
         this.startX = e.touches[0].clientX - this.translateX
         this.startY = e.touches[0].clientY - this.translateY
       }
@@ -142,7 +145,7 @@
         e.preventDefault()
         const currentDistance = this.getDistance(e.touches)
         const scale = (currentDistance / this.startDistance) * this.startScale
-        this.currentScale = Math.min(Math.max(scale, 1), 4)
+        this.currentScale = Math.min(Math.max(scale, 1), this.maxScale)
         this.updateTransform(this.activeImage)
       } else if (this.isDragging && e.touches.length === 1 && this.currentScale > 1) {
         e.preventDefault()
@@ -159,6 +162,7 @@
       this.isPinching = false
       if (e.touches.length === 0) {
         this.isDragging = false
+        this.activeImage?.classList.remove('panning')
         if (this.currentScale <= 1) {
           this.resetZoom()
         }
@@ -250,6 +254,10 @@
   .pinch-zoom-wrapper img {
     will-change: transform;
     transition: transform 0.1s ease-out;
+  }
+
+  .pinch-zoom-wrapper img.panning {
+    transition: none;
   }
 
   .pinch-zoom-enabled .pinch-zoom-wrapper {

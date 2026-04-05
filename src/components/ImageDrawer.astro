@@ -26,13 +26,23 @@ const imageData = await Promise.all(
       alt: data.altText || data.aspectRatio,
       title: data.title,
       description: data.description,
+      format: data.format,
+      collectionIndex: data.collectionIndex,
+      categoryIndex: data.categoryIndex,
+      imageIndex: data.imageIndex,
     }
   })
 )
 ---
 
-<div id="image-drawer" class="relative bg-black lg:bg-white z-[100] h-full w-full overflow-y-scroll overflow-x-hidden scroll-smooth scrollbar-hide">
-  <div id="drawer-image-container" class="absolute top-20 lg:top-[120px] left-0 right-0 bottom-10 lg:px-6 pb-20">
+<div
+  id="image-drawer"
+  class="bg-white lg:bg-transparent relative z-[100] h-full w-full overflow-y-scroll overflow-x-hidden scroll-smooth scrollbar-hide"
+>
+  <div
+    id="drawer-image-container"
+    class="absolute top-20 lg:top-[120px] left-0 right-0 bottom-10 lg:px-6 pb-20 opacity-0 transition-opacity duration-300"
+  >
     <div class="w-full pinch-zoom-wrapper">
       <img
         id="drawer-image"
@@ -41,12 +51,15 @@ const imageData = await Promise.all(
         alt=""
         sizes="(width <= 500px) 200px, (width <= 768px) 650px"
         style="max-height: calc(100vh - 250px)"
-        class="pinch-zoom-image w-full h-auto object-contain object-left-top"
+        class="block pinch-zoom-image w-full lg:w-auto max-w-full h-auto"
         oncontextmenu="return false"
       />
     </div>
-    <div class="pb-10 px-6 lg:px-0 text-white lg:text-black">
-      <h2 id="drawer-title" class="mt-4"></h2>
+    <div id="drawer-content" class="pb-10 px-6 lg:px-0 text-white lg:text-black">
+      <div class="flex justify-between items-center mt-4">
+        <h2 id="drawer-title"></h2>
+        <div id="drawer-format"></div>
+      </div>
       <p id="drawer-description" class="pb-4"></p>
       <Button id="drawer-enquire-button" href="/contact">Enquire</Button>
     </div>
@@ -56,7 +69,6 @@ const imageData = await Promise.all(
     <Image src={CloseIcon} alt="Close" width={36} height={36} loading="lazy" />
   </button>
 </div>
-<div id="image-drawer-container" class="fixed top-0 left-0 bottom-0 right-0 bg-white/60"></div>
 
 <!-- Store image data for JS access -->
 <script is:inline id="image-data" type="application/json" set:html={JSON.stringify(imageData)} />
@@ -64,10 +76,13 @@ const imageData = await Promise.all(
 <script>
   const imageDrawer = document.getElementById('image-drawer')
   const imageDrawerContainer = document.getElementById('image-drawer-container')
+  const drawerImageContainer = document.getElementById('drawer-image-container')
   const closeImageDrawerButton = document.getElementById('close-image-drawer-button')
   const drawerImage = document.getElementById('drawer-image') as HTMLImageElement
   const drawerTitle = document.getElementById('drawer-title')
   const drawerDescription = document.getElementById('drawer-description')
+  const drawerFormat = document.getElementById('drawer-format')
+  const drawerContent = document.getElementById('drawer-content')
   const drawerEnquireButton = document.getElementById('drawer-enquire-button') as HTMLAnchorElement
 
   // Load image data from JSON
@@ -79,7 +94,21 @@ const imageData = await Promise.all(
     alt: string
     title: string
     description: string
+    format: string
+    collectionIndex: number
+    categoryIndex: number
+    imageIndex: number
   }> = imageDataScript ? JSON.parse(imageDataScript.textContent || '[]') : []
+
+  // Sync drawer content width to the image's display width
+  if (drawerImage && drawerContent) {
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        drawerContent.style.width = entry.contentRect.width + 'px'
+      }
+    })
+    resizeObserver.observe(drawerImage)
+  }
 
   // Get pinchZoom controller from window
   const getPinchZoom = () => (window as any).pinchZoom
@@ -91,17 +120,27 @@ const imageData = await Promise.all(
     const data = imageData.find((img) => img.id === imageId)
     if (!data) return
 
-    if (drawerImage) {
-      drawerImage.src = data.src
-      drawerImage.srcset = data.srcset
-      drawerImage.alt = data.alt
-    }
-    if (drawerTitle) drawerTitle.textContent = data.title
-    if (drawerDescription) drawerDescription.textContent = data.description
-    if (drawerEnquireButton) drawerEnquireButton.href = `/contact?photo=${data.id}`
+    // Fade out, update content, fade in
+    drawerImageContainer?.classList.remove('opacity-100')
+    drawerImageContainer?.classList.add('opacity-0')
 
-    // Reset zoom when changing images
-    getPinchZoom()?.resetZoom()
+    setTimeout(() => {
+      if (drawerImage) {
+        drawerImage.src = data.src
+        drawerImage.srcset = data.srcset
+        drawerImage.alt = data.alt
+      }
+      if (drawerTitle) drawerTitle.textContent = data.title
+      if (drawerDescription) drawerDescription.textContent = data.description
+      if (drawerFormat) drawerFormat.textContent = `${data.format} | ${data.collectionIndex} • ${data.categoryIndex} • ${data.imageIndex}`
+      if (drawerEnquireButton) drawerEnquireButton.href = `/contact?photo=${data.id}`
+
+      // Reset zoom when changing images
+      getPinchZoom()?.resetZoom()
+
+      drawerImageContainer?.classList.remove('opacity-0')
+      drawerImageContainer?.classList.add('opacity-100')
+    }, 300)
   }
 
   const openDrawer = () => {
@@ -109,12 +148,16 @@ const imageData = await Promise.all(
     imageDrawerContainer?.classList.add('active')
     imageDrawer?.classList.add('pinch-zoom-enabled')
     getPinchZoom()?.setActiveImage(drawerImage as HTMLImageElement)
+    drawerImageContainer?.classList.remove('opacity-0')
+    drawerImageContainer?.classList.add('opacity-100')
   }
 
   const closeDrawer = () => {
     imageDrawer?.classList.remove('active')
     imageDrawerContainer?.classList.remove('active')
     imageDrawer?.classList.remove('pinch-zoom-enabled')
+    drawerImageContainer?.classList.remove('opacity-100')
+    drawerImageContainer?.classList.add('opacity-0')
     getPinchZoom()?.resetZoom()
     getPinchZoom()?.setActiveImage(null)
   }
@@ -186,18 +229,5 @@ const imageData = await Promise.all(
     z-index: 1200;
     transition: transform 0.3s ease-in-out;
     overscroll-behavior: none;
-  }
-
-  #image-drawer-container {
-    z-index: -1;
-    opacity: 0;
-    transition: opacity 0.2s ease-in-out;
-    overscroll-behavior: none;
-  }
-
-  #image-drawer-container.active {
-    z-index: 1000;
-    opacity: 1;
-    transition: opacity 0.2s ease-in-out;
   }
 </style>

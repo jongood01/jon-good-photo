@@ -1,10 +1,81 @@
 ---
-
+const images = ['/image5.jpg', '/image4.jpg']
 ---
 
-<section
-  id="superhero"
-  class="h-screen w-full bg-black flex flex-col items-center justify-center snap-start snap-always bg-[url('/image5.jpg')] bg-cover bg-center"
->
-  <div class="w-full h-[150px] md:h-[255px] bg-[url('/logo-repeat.svg')] bg-right md:bg-center bg-cover md:bg-contain bg-repeat-x"></div>
+<section id="superhero" class="relative h-screen w-full overflow-hidden bg-black snap-start snap-always flex flex-col items-center justify-center">
+  {
+    images.map((src, i) => (
+      <div
+        class="superhero-bg absolute inset-0 bg-cover bg-center opacity-0 transition-opacity"
+        style={`background-image: url('${src}'); transition-duration: 1500ms;`}
+        data-index={i}
+      />
+    ))
+  }
+  <div class="relative z-10 w-full max-w-[700px] aspect-[6/1] bg-[url('/logotext.svg')] bg-contain bg-right md:bg-center bg-no-repeat"></div>
+  <div class="text-white absolute bottom-4 left-0 right-0 text-center text-sm">--- Srcoll down ---</div>
 </section>
+
+<script>
+  const HOLD_MS = 4000
+  const FADE_MS = 1500
+
+  const section = document.getElementById('superhero')!
+  const slides = Array.from(document.querySelectorAll<HTMLElement>('.superhero-bg'))
+
+  let current = 0
+  let timer: ReturnType<typeof setTimeout> | null = null
+  let running = false
+
+  const clearTimer = () => {
+    if (timer !== null) {
+      clearTimeout(timer)
+      timer = null
+    }
+  }
+
+  const reset = () => {
+    clearTimer()
+    slides.forEach((s) => (s.style.opacity = '0'))
+    current = 0
+  }
+
+  const showSlide = (index: number) => {
+    if (!running) return
+    slides[index].style.opacity = '1'
+
+    timer = setTimeout(() => {
+      if (!running) return
+      slides[index].style.opacity = '0'
+
+      timer = setTimeout(() => {
+        current = (index + 1) % slides.length
+        showSlide(current)
+      }, FADE_MS)
+    }, HOLD_MS + FADE_MS)
+  }
+
+  const start = () => {
+    if (running) return
+    running = true
+    timer = setTimeout(() => showSlide(current), 500)
+  }
+
+  const stop = () => {
+    running = false
+    reset()
+  }
+
+  const observer = new IntersectionObserver(
+    ([entry]) => {
+      if (entry.isIntersecting) {
+        start()
+      } else {
+        stop()
+      }
+    },
+    { threshold: 0.5 }
+  )
+
+  observer.observe(section)
+</script>

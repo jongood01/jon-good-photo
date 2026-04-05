@@ -9,7 +9,9 @@ const { title, description } = Astro.props
     <BaseHead title={title} description={description} />
   </head>
 
-  <body class="bg-white overflow-x-hidden">
+  <body
+    class="bg-white overflow-x-hidden pb-[env(safe-area-inset-bottom)] pt-[env(safe-area-inset-top)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]"
+  >
     <main class="mx-auto overflow-y-scroll snap-mandatory snap-y h-screen">
       <slot />
     </main>
