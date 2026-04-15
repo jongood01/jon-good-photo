@@ -55,9 +55,9 @@ const imageData = await Promise.all(
         oncontextmenu="return false"
       />
     </div>
-    <div id="drawer-content" class="pb-10 px-6 lg:px-0 text-white lg:text-black">
+    <div id="drawer-content" class="pb-10 px-4 lg:px-0">
       <div class="flex justify-between items-center mt-4">
-        <h2 id="drawer-title"></h2>
+        <h2 id="drawer-title" class="text-xl"></h2>
         <div id="drawer-format"></div>
       </div>
       <p id="drawer-description" class="pb-4"></p>
@@ -65,7 +65,11 @@ const imageData = await Promise.all(
     </div>
   </div>
 
-  <button id="close-image-drawer-button" title="Close image" class="lg:hidden absolute top-2 right-2">
+  <div id="drawer-placeholder" class="hidden lg:flex absolute inset-0 items-center justify-center">
+    <h2 class="text-2xl font-light tracking-widest uppercase text-neutral-400">Scroll to view</h2>
+  </div>
+
+  <button id="close-image-drawer-button" title="Close image" class="text-black lg:hidden absolute top-4 right-2 z-20">
     <Image src={CloseIcon} alt="Close" width={36} height={36} loading="lazy" />
   </button>
 </div>
@@ -84,6 +88,7 @@ const imageData = await Promise.all(
   const drawerFormat = document.getElementById('drawer-format')
   const drawerContent = document.getElementById('drawer-content')
   const drawerEnquireButton = document.getElementById('drawer-enquire-button') as HTMLAnchorElement
+  const drawerPlaceholder = document.getElementById('drawer-placeholder')
 
   // Load image data from JSON
   const imageDataScript = document.getElementById('image-data')
@@ -119,6 +124,9 @@ const imageData = await Promise.all(
   const setActiveImage = (imageId: string) => {
     const data = imageData.find((img) => img.id === imageId)
     if (!data) return
+
+    // Hide placeholder once an image is active
+    drawerPlaceholder?.classList.add('!hidden')
 
     // Fade out, update content, fade in
     drawerImageContainer?.classList.remove('opacity-100')
