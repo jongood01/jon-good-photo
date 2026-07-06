@@ -3,6 +3,8 @@
 'altText': 'Queenstown'
 'title': 'Queenstown'
 'description': 'Queenstown description'
+'shortDescription': 'Queenstown short description'
+'location': 'Location goes here'
 'file': './image3.jpg'
 'thumbnail': './image3.jpg'
 'format': 'Fujifilm XT3'
@@ -10,4 +12,5 @@
 'categoryIndex': 0
 'imageIndex': 1
 'aspectRatio': '1:1'
+'template': 'text-right'
 ---

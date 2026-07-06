@@ -83,6 +83,41 @@ const images = await getCollection('photos')
     }
   })
 
+  // Scroll to the gallery section and/or a specific image based on the URL
+  const params = new URLSearchParams(window.location.search)
+  const selectedId = params.get('selected')
+
+  if (selectedId) {
+    document.getElementById(`thumbnail-${selectedId}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  } else if (window.location.hash === '#gallery') {
+    document.getElementById('gallery')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
+  // Strip ?selected= and #gallery from the URL once the user scrolls away from the gallery section
+  const gallerySection = document.getElementById('gallery')
+  const mainScroll = document.querySelector('main')
+
+  if (gallerySection && mainScroll) {
+    let hasEnteredGallery = false
+
+    const galleryVisibilityObserver = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          hasEnteredGallery = true
+          return
+        }
+
+        if (hasEnteredGallery && (window.location.search || window.location.hash)) {
+          hasEnteredGallery = false
+          history.replaceState(null, '', window.location.pathname)
+        }
+      },
+      { root: mainScroll, threshold: 0.5 }
+    )
+
+    galleryVisibilityObserver.observe(gallerySection)
+  }
+
   // Gallery scroll - handles image switching
   let currentActiveId: string | null = null
 

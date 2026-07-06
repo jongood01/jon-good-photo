@@ -1,7 +1,7 @@
 ---
 export interface Props {
   type?: 'button' | 'submit' | 'reset'
-  variant?: 'primary' | 'secondary' | 'ghost'
+  variant?: 'primary' | 'secondary' | 'ghost' | 'outline'
   size?: 'sm' | 'md' | 'lg'
   href?: string
   disabled?: boolean
@@ -13,12 +13,13 @@ export interface Props {
 const { type = 'button', variant = 'primary', size = 'md', disabled = false, class: className = '', href, ...rest } = Astro.props
 
 const baseClasses =
-  'w-full md:w-auto font-medium font-sans transition-colors focus:ring-2 focus:ring-offset-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed'
+  'block md:inline-block w-full md:w-auto min-w-[140px] overflow-hidden whitespace-nowrap font-medium font-sans transition-colors focus:ring-2 focus:ring-offset-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed'
 
 const variantClasses = {
   primary: 'bg-pureblue text-white hover:bg-blue-700 focus:ring-blue-500',
   secondary: 'bg-gray-600 text-white hover:bg-gray-700 focus:ring-gray-500',
   ghost: 'bg-transparent text-gray-700 hover:bg-gray-100 focus:ring-gray-500 border border-gray-300',
+  outline: 'bg-transparent text-pureblue border border-pureblue hover:bg-pureblue hover:text-white focus:ring-blue-500',
 }
 
 const sizeClasses = {

@@ -25,11 +25,14 @@ const photos = defineCollection({
       thumbnail: image(),
       title: z.string(),
       description: z.string(),
+      shortDescription: z.string(),
+      location: z.string(),
       format: z.string(),
       collectionIndex: z.number(),
       categoryIndex: z.number(),
       imageIndex: z.number(),
       aspectRatio: z.enum(['1:1', '3:2', '4:5', '16:9']),
+      template: z.enum(['text-left', 'text-right', 'text-left-third', 'text-right-third', 'stacked', 'photo-top']),
     }),
 })
 

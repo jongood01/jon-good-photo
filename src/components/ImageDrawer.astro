@@ -25,7 +25,8 @@ const imageData = await Promise.all(
       srcset: optimizedImage.srcSet.attribute,
       alt: data.altText || data.aspectRatio,
       title: data.title,
-      description: data.description,
+      shortDescription: data.shortDescription,
+      location: data.location,
       format: data.format,
       collectionIndex: data.collectionIndex,
       categoryIndex: data.categoryIndex,
@@ -56,17 +57,20 @@ const imageData = await Promise.all(
       />
     </div>
     <div id="drawer-content" class="pb-10 px-4 lg:px-0">
-      <div class="flex justify-between items-center mt-4">
+      <div class="flex justify-between mt-4">
         <h2 id="drawer-title" class="text-xl"></h2>
         <div id="drawer-format"></div>
       </div>
-      <p id="drawer-description" class="pb-4"></p>
-      <Button id="drawer-enquire-button" href="/contact">Enquire</Button>
+      <p id="drawer-description" class="mb-8 whitespace-pre-wrap"></p>
+      <div class="flex flex-col sm:flex-row gap-4">
+        <Button id="drawer-enquire-button" href="/contact">Enquire</Button>
+        <Button id="drawer-view-button" href="/photo" variant="outline">View</Button>
+      </div>
     </div>
   </div>
 
   <div id="drawer-placeholder" class="hidden lg:flex absolute inset-0 items-center justify-center">
-    <h2 class="text-2xl font-light tracking-widest uppercase text-neutral-400">Scroll to view</h2>
+    <h2 class="text-xl">Scroll filmstrip to view</h2>
   </div>
 
   <button id="close-image-drawer-button" title="Close image" class="text-black lg:hidden absolute top-4 right-2 z-20">
@@ -88,6 +92,7 @@ const imageData = await Promise.all(
   const drawerFormat = document.getElementById('drawer-format')
   const drawerContent = document.getElementById('drawer-content')
   const drawerEnquireButton = document.getElementById('drawer-enquire-button') as HTMLAnchorElement
+  const drawerViewButton = document.getElementById('drawer-view-button') as HTMLAnchorElement
   const drawerPlaceholder = document.getElementById('drawer-placeholder')
 
   // Load image data from JSON
@@ -98,7 +103,8 @@ const imageData = await Promise.all(
     srcset: string
     alt: string
     title: string
-    description: string
+    shortDescription: string
+    location: string
     format: string
     collectionIndex: number
     categoryIndex: number
@@ -121,9 +127,14 @@ const imageData = await Promise.all(
   let touchStartY = 0
   let touchStartX = 0
 
+  // Guards against a slower, superseded request revealing after a newer one
+  let activeRequestId = 0
+
   const setActiveImage = (imageId: string) => {
     const data = imageData.find((img) => img.id === imageId)
     if (!data) return
+
+    const requestId = ++activeRequestId
 
     // Hide placeholder once an image is active
     drawerPlaceholder?.classList.add('!hidden')
@@ -133,21 +144,40 @@ const imageData = await Promise.all(
     drawerImageContainer?.classList.add('opacity-0')
 
     setTimeout(() => {
-      if (drawerImage) {
-        drawerImage.src = data.src
-        drawerImage.srcset = data.srcset
-        drawerImage.alt = data.alt
+      if (requestId !== activeRequestId) return
+
+      // Preload off-DOM so we only reveal once the image can actually be painted
+      const preload = new window.Image()
+      preload.srcset = data.srcset
+      preload.src = data.src
+
+      const reveal = () => {
+        if (requestId !== activeRequestId) return
+
+        if (drawerImage) {
+          drawerImage.src = data.src
+          drawerImage.srcset = data.srcset
+          drawerImage.alt = data.alt
+        }
+        if (drawerTitle) drawerTitle.textContent = data.title
+        if (drawerDescription) drawerDescription.textContent = data.shortDescription
+        if (drawerFormat) drawerFormat.textContent = `${data.format} | ${data.collectionIndex} • ${data.categoryIndex} • ${data.imageIndex}`
+        if (drawerEnquireButton) drawerEnquireButton.href = `/contact?photo=${data.id}`
+        if (drawerViewButton) drawerViewButton.href = `/photo/${data.id}`
+
+        // Reset zoom when changing images
+        getPinchZoom()?.resetZoom()
+
+        drawerImageContainer?.classList.remove('opacity-0')
+        drawerImageContainer?.classList.add('opacity-100')
       }
-      if (drawerTitle) drawerTitle.textContent = data.title
-      if (drawerDescription) drawerDescription.textContent = data.description
-      if (drawerFormat) drawerFormat.textContent = `${data.format} | ${data.collectionIndex} • ${data.categoryIndex} • ${data.imageIndex}`
-      if (drawerEnquireButton) drawerEnquireButton.href = `/contact?photo=${data.id}`
 
-      // Reset zoom when changing images
-      getPinchZoom()?.resetZoom()
-
-      drawerImageContainer?.classList.remove('opacity-0')
-      drawerImageContainer?.classList.add('opacity-100')
+      if (preload.decode) {
+        preload.decode().then(reveal).catch(reveal)
+      } else {
+        preload.onload = reveal
+        preload.onerror = reveal
+      }
     }, 300)
   }
 

@@ -1,11 +1,28 @@
 ---
+import ContentItem from './ContentItem.astro'
 
+let page = 0
+const pages = Array.from({ length: 6 }, () => {
+  page += Math.floor(Math.random() * 4) + 1
+  return String(page).padStart(2, '0')
+})
 ---
 
-<section
-  id="hero"
-  class="h-screen w-full bg-black flex flex-col items-center justify-center snap-start snap-always"
-  style="background-image: url('/image5.jpg'); background-size: cover; background-position: center;"
->
-  <div class="text-black text-3xl font-semibold">"Some kind of quote"</div>
+<section id="contents" class="w-full min-h-screen flex flex-col md:flex-row snap-start snap-always">
+  <div class="w-full md:w-1/2 text-black flex items-center justify-center px-8 py-16 md:py-0">
+    <div class="w-full max-w-md">
+      <h1>Contents</h1>
+
+      <ul class="space-y-5">
+        <ContentItem count="I." label="Landscapes" page={pages[0]} />
+        <ContentItem count="II." label="Collections" page={pages[1]} />
+        <ContentItem count="III." label="Studies" page={pages[2]} />
+        <ContentItem count="IV." label="Journal" page={pages[3]} />
+        <ContentItem count="A." label="Appendix I" page={pages[4]} />
+        <ContentItem count="B." label="Appendix II" page={pages[5]} />
+      </ul>
+    </div>
+  </div>
+
+  <div class="w-full md:w-1/2 h-[50vh] md:h-auto bg-cover bg-center" style="background-image: url('/image5.jpg');"></div>
 </section>

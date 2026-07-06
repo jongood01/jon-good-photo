@@ -1,0 +1,50 @@
+---
+import { Image } from 'astro:assets'
+import type { CollectionEntry } from 'astro:content'
+import Button from '../Button.astro'
+import { getPhotoWidths } from '../../utils/photoImage'
+
+interface Props {
+  photo: CollectionEntry<'photos'>
+}
+
+const { photo } = Astro.props
+const { data } = photo
+---
+
+<main class="min-h-screen bg-stone-50 pt-[140px] pb-20">
+  <div class="container mx-auto px-6 max-w-4xl">
+    <div class="w-full max-w-3xl mx-auto">
+      <Image
+        src={data.file}
+        alt={data.altText}
+        widths={getPhotoWidths(data.aspectRatio)}
+        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 75vw, 1200px"
+        quality={'high'}
+        class="w-full h-auto object-contain"
+      />
+    </div>
+
+    <div class="mt-8 text-center max-w-2xl mx-auto">
+      <div class="flex flex-col items-center">
+        <h1 class="font-semibold mb-2">{data.title}</h1>
+      </div>
+      {data.location && <p class="text-sm text-gray-500 mb-6">{data.location}</p>}
+      <p class="text-lg text-gray-600 mb-6 whitespace-pre-wrap">{data.description}</p>
+
+      <div class="flex justify-center space-x-8 text-sm text-gray-500">
+        <div><span class="font-medium">Format:</span> {data.format}</div>
+        <div><span class="font-medium">Aspect Ratio:</span> {data.aspectRatio}</div>
+      </div>
+
+      <div class="mt-4 text-xs text-gray-400">
+        Collection {data.collectionIndex} • Category {data.categoryIndex} • Image {data.imageIndex}
+      </div>
+
+      <div class="mt-12 flex flex-col sm:flex-row justify-center gap-4">
+        <Button href={`/contact?photo=${data.id}`}>Enquire</Button>
+        <Button href={`/?selected=${data.id}#gallery`} variant="outline"> Back to gallery →</Button>
+      </div>
+    </div>
+  </div>
+</main>
