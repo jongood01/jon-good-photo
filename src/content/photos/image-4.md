@@ -1,8 +1,8 @@
 ---
 'id': 'image-4'
-'altText': 'Queenstown'
-'title': 'Queenstown'
-'description': 'Queenstown description'
+'altText': 'ONeills Bay'
+'title': 'ONeills Bay'
+'description': 'Description goes here'
 'file': './image4.jpg'
 'thumbnail': './image4-thumbnail.jpg'
 'format': 'Test'

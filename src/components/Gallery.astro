@@ -6,16 +6,15 @@ import ArrowDownIcon from '../assets/arrow-down-icon.svg'
 import ImageDrawer from './ImageDrawer.astro'
 import PinchZoom from './PinchZoom.astro'
 import Header from './Header.astro'
-import Footer from './Footer.astro'
 
 const images = await getCollection('photos')
 ---
 
-<section id="gallery" class="mt-8 md:mt-0 relative lg:flex h-screen gap-6 snap-start snap-always md:mx-4 lg:mx-8">
+<section id="gallery" class="mt-8 md:mt-0 relative lg:flex h-screen gap-6 snap-start snap-always">
   <Header />
   <div
     id="gallery-container"
-    class="w-full max-w-[370px] pb-10 pt-[120px] mx-auto md:mx-0 overflow-y-scroll scroll-smooth px-4 lg:px-10 h-full flex flex-col gap-8 snap-mandatory snap-y scrollbar-hide"
+    class="w-full max-w-[370px] pb-10 pt-[130px] mx-auto md:mx-0 overflow-y-scroll scroll-smooth px-4 lg:px-10 h-full flex flex-col gap-8 snap-mandatory snap-y scrollbar-hide"
   >
     <div class="gallery-image max-w-[320px] snap-center snap-always">
       <Image src={gradient} alt="gradient" width={320} height={320} loading="eager" />
@@ -56,7 +55,6 @@ const images = await getCollection('photos')
   </div>
 
   <ImageDrawer />
-  <Footer />
 </section>
 
 <PinchZoom />

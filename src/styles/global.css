@@ -113,7 +113,6 @@ h4,
 h5,
 h6 {
   font-family: var(--font-sans);
-  color: oklch(64.5% 0.246 16.439);
 }
 
 .scrollbar-hide {
