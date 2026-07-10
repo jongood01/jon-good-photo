@@ -21,7 +21,7 @@ const photoOrderClass = textSide === 'right' ? 'lg:order-1' : 'lg:order-2'
 ---
 
 <main class={`min-h-screen bg-stone-50 grid grid-cols-1 ${gridColsClass}`}>
-  <div class={`flex items-center justify-center px-6 lg:px-16 pt-[140px] pb-24 lg:pb-20 ${textSpanClass} ${textOrderClass}`}>
+  <div class={`flex items-center justify-center px-6 lg:px-16 pt-[140px] pb-10 lg:pb-20 ${textSpanClass} ${textOrderClass}`}>
     <div class="max-w-md">
       <h1 class="font-semibold mb-2">{data.title}</h1>
       {data.location && <p class="text-sm text-gray-500 mb-6">{data.location}</p>}
@@ -29,7 +29,7 @@ const photoOrderClass = textSide === 'right' ? 'lg:order-1' : 'lg:order-2'
 
       <div class="flex space-x-8 text-sm text-gray-500">
         <div><span class="font-medium">Format:</span> {data.format}</div>
-        <div><span class="font-medium">Aspect Ratio:</span> {data.aspectRatio}</div>
+        <div><span class="font-medium">Ratio:</span> {data.aspectRatio}</div>
       </div>
 
       <div class="mt-4 text-xs text-gray-400">
@@ -43,7 +43,7 @@ const photoOrderClass = textSide === 'right' ? 'lg:order-1' : 'lg:order-2'
     </div>
   </div>
 
-  <div class={`flex items-center justify-center px-6 lg:px-16 pt-[140px] pb-10 lg:pb-20 ${photoSpanClass} ${photoOrderClass}`}>
+  <div class={`flex items-center justify-center px-6 lg:px-16 pt-8 pb-10 lg:pt-[140px] lg:pb-20 ${photoSpanClass} ${photoOrderClass}`}>
     <Image
       src={data.file}
       alt={data.altText}

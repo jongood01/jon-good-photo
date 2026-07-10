@@ -1,0 +1,19 @@
+---
+'id': 'image-6'
+'altText': 'Muriwai Surf'
+'title': 'Muriwai Surf'
+'description': 'Description goes here. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+
+
+Does it work with multi paragraphs?'
+'shortDescription': 'Short description goes here'
+'location': 'Location goes here'
+'file': './image6.jpg'
+'thumbnail': './image6-thumbnail.jpg'
+'format': 'Test'
+'collectionIndex': 1
+'categoryIndex': 0
+'imageIndex': 1
+'aspectRatio': '3:2'
+'template': 'text-left'
+---

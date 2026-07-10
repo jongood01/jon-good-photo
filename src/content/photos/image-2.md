@@ -7,7 +7,7 @@
 'location': 'Location goes here'
 'file': './image2.jpg'
 'thumbnail': './image2.jpg'
-'format': 'Fujifilm XT3'
+'format': 'Canon 5D MKII'
 'collectionIndex': 1
 'categoryIndex': 0
 'imageIndex': 1

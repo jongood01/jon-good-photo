@@ -6,13 +6,39 @@ import Header from '../components/Header.astro'
 <Layout>
   <Header />
   <div class="pt-[120px] flex h-full">
-    <div class="w-full md:w-1/2 p-8">
+    <div class="w-full md:w-1/2 py-8 px-10">
       <h1>About</h1>
-      <div class="mt-10 grid grid-cols-1 grid-rows-4 lg:grid-cols-2 lg:grid-rows-2 gap-4">
-        <div class="border-t border-black">lorem ipsum dolor sit amet</div>
-        <div class="border-t border-black">lorem ipsum dolor sit amet</div>
-        <div class="border-t border-black">lorem ipsum dolor sit amet</div>
-        <div class="border-t border-black">Location: Auckland, New Zealand</div>
+      <div class="mt-10 py-2 grid grid-cols-1 grid-rows-4 lg:grid-cols-2 lg:grid-rows-2 gap-6">
+        <div>
+          <img src="/headshot.jpg" alt="Portrait of Jon Good" class="w-52 h-64 object-cover object-top" />
+        </div>
+        <div class="border-t py-2 border-black text-justify">
+          My photography story: - No masters of fine arts or any photography education apart from high school photography class - I learned by just
+          getting out there and taking photos and failing lots. Originally on a Minolta film camera, I took lots of slides, landscapes, street
+          portraits, anything not really knowing what I was doing or why I was shooting slide film. But I enjoyed the process. Moving to digital I did
+          some portraits, including the self-portrait left, events (not for me), and continued landscapes converting digital raw to black and white.
+          Photography has been my artform, my outlet and even though there are periods where I put the camera away, I always come back.
+        </div>
+        <div class="border-t py-2 border-black text-justify">
+          Current work:
+          <p>
+            New Zealand's diverse landscapes are the perfect cast of characters to photograph. From mountains, rivers, and lakes to the rugged west
+            coast that draws me back again and again.
+          </p>
+          - Black and white landscapes combination of film and digital. I've been loving the full analogue process of medium format film and developing
+          at home. - I approach landscape photography like the scene is sitting for a portrait. It takes time for the personality of the landscape to show.
+        </div>
+        <div class="border-t py-2 border-black text-justify">
+          Socials: <br />
+          Instagram: jongood01
+          <br /> Facebook: JonGoodPhoto
+        </div>
+        <div class="border-t py-2 border-black text-justify">
+          Currently admiring the work of:
+          <ul><li>Gregory Crewdson</li><li>Aberlado Morell</li></ul>
+        </div>
+        <div class="border-t py-2 border-black text-justify">Location: <br /> Auckland, New Zealand</div>
+        <div class="border-t py-2 border-black">All images and design copyright Jon Good Photography 2026 &copy;</div>
       </div>
     </div>
     <div class="hidden md:block w-1/2 bg-stone-800 p-8">
